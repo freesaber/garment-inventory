@@ -1,0 +1,35 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Backend
+backend/**/target/
+backend/**/*.class
+backend/**/*.jar
+backend/**/*.war
+backend/**/application-local.yml
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.npm/
+frontend/*.local
+frontend/.env.local
+frontend/.env.*.local
+
+# Temp
+*.tmp
+*.temp
+*.swp
+*~
