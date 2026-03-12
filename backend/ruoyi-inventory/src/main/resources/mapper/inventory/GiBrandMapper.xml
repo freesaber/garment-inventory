@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.inventory.mapper.GiBrandMapper">
+    
+    <resultMap type="GiBrand" id="GiBrandResult">
+        <id     property="brandId"    column="brand_id"    />
+        <result property="brandName"  column="brand_name"  />
+        <result property="brandLogo"  column="brand_logo"  />
+        <result property="sort"       column="sort"        />
+        <result property="status"     column="status"      />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"   column="create_by"   />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy"   column="update_by"   />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectGiBrandVo">
+        select brand_id, brand_name, brand_logo, sort, status, del_flag, create_by, create_time, update_by, update_time
+        from gi_brand
+    </sql>
+
+    <select id="selectGiBrandList" parameterType="GiBrand" resultMap="GiBrandResult">
+        <include refid="selectGiBrandVo"/>
+        <where>
+            del_flag = '0'
+            <if test="brandName != null and brandName != ''">
+                AND brand_name like concat('%', #{brandName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by sort
+    </select>
+
+    <select id="selectGiBrandById" parameterType="Long" resultMap="GiBrandResult">
+        <include refid="selectGiBrandVo"/>
+        where brand_id = #{brandId}
+    </select>
+
+    <select id="checkBrandNameUnique" parameterType="String" resultMap="GiBrandResult">
+        <include refid="selectGiBrandVo"/>
+        where brand_name = #{brandName} and del_flag = '0' limit 1
+    </select>
+
+    <insert id="insertGiBrand" parameterType="GiBrand" useGeneratedKeys="true" keyProperty="brandId">
+        insert into gi_brand
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="brandName != null and brandName != ''">brand_name,</if>
+            <if test="brandLogo != null">brand_logo,</if>
+            <if test="sort != null">sort,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="brandName != null and brandName != ''">#{brandName},</if>
+            <if test="brandLogo != null">#{brandLogo},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateGiBrand" parameterType="GiBrand">
+        update gi_brand
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="brandName != null and brandName != ''">brand_name = #{brandName},</if>
+            <if test="brandLogo != null">brand_logo = #{brandLogo},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        where brand_id = #{brandId}
+    </update>
+
+    <delete id="deleteGiBrandById" parameterType="Long">
+        update gi_brand set del_flag = '1' where brand_id = #{brandId}
+    </delete>
+
+    <delete id="deleteGiBrandByIds" parameterType="String">
+        update gi_brand set del_flag = '1' where brand_id in
+        <foreach item="brandId" collection="array" open="(" separator="," close=")">
+            #{brandId}
+        </foreach>
+    </delete>
+</mapper>

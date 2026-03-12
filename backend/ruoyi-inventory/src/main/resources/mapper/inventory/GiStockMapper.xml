@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.inventory.mapper.GiStockMapper">
+    
+    <resultMap type="GiStock" id="GiStockResult">
+        <id     property="stockId"    column="stock_id"    />
+        <result property="deptId"     column="dept_id"     />
+        <result property="deptName"   column="dept_name"   />
+        <result property="skuId"      column="sku_id"      />
+        <result property="skuCode"    column="sku_code"    />
+        <result property="goodsName"  column="goods_name"  />
+        <result property="color"      column="color"       />
+        <result property="size"       column="size"        />
+        <result property="quantity"   column="quantity"    />
+        <result property="lockedQty"  column="locked_qty"  />
+        <result property="warningQty" column="warning_qty" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectGiStockVo">
+        select st.stock_id, st.dept_id, d.dept_name, st.sku_id, s.sku_code, g.goods_name, s.color, s.size,
+               st.quantity, st.locked_qty, st.warning_qty, st.create_time, st.update_time
+        from gi_stock st
+        left join gi_sku s on st.sku_id = s.sku_id
+        left join gi_goods g on s.goods_id = g.goods_id
+        left join sys_dept d on st.dept_id = d.dept_id
+    </sql>
+
+    <select id="selectGiStockList" parameterType="GiStock" resultMap="GiStockResult">
+        <include refid="selectGiStockVo"/>
+        <where>
+            <if test="deptId != null">
+                AND st.dept_id = #{deptId}
+            </if>
+            <if test="skuCode != null and skuCode != ''">
+                AND s.sku_code like concat('%', #{skuCode}, '%')
+            </if>
+            <if test="goodsName != null and goodsName != ''">
+                AND g.goods_name like concat('%', #{goodsName}, '%')
+            </if>
+            <if test="color != null and color != ''">
+                AND s.color = #{color}
+            </if>
+            <if test="size != null and size != ''">
+                AND s.size = #{size}
+            </if>
+        </where>
+        order by st.update_time desc
+    </select>
+
+    <select id="selectGiStockById" parameterType="Long" resultMap="GiStockResult">
+        <include refid="selectGiStockVo"/>
+        where st.stock_id = #{stockId}
+    </select>
+
+    <select id="selectGiStockByDeptAndSku" resultMap="GiStockResult">
+        <include refid="selectGiStockVo"/>
+        where st.dept_id = #{deptId} and st.sku_id = #{skuId}
+    </select>
+
+    <select id="selectWarningStockList" parameterType="GiStock" resultMap="GiStockResult">
+        <include refid="selectGiStockVo"/>
+        <where>
+            st.quantity &lt;= st.warning_qty
+            <if test="deptId != null">
+                AND st.dept_id = #{deptId}
+            </if>
+        </where>
+        order by st.quantity asc
+    </select>
+
+    <insert id="insertGiStock" parameterType="GiStock" useGeneratedKeys="true" keyProperty="stockId">
+        insert into gi_stock
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">dept_id,</if>
+            <if test="skuId != null">sku_id,</if>
+            <if test="quantity != null">quantity,</if>
+            <if test="lockedQty != null">locked_qty,</if>
+            <if test="warningQty != null">warning_qty,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">#{deptId},</if>
+            <if test="skuId != null">#{skuId},</if>
+            <if test="quantity != null">#{quantity},</if>
+            <if test="lockedQty != null">#{lockedQty},</if>
+            <if test="warningQty != null">#{warningQty},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateGiStock" parameterType="GiStock">
+        update gi_stock
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="lockedQty != null">locked_qty = #{lockedQty},</if>
+            <if test="warningQty != null">warning_qty = #{warningQty},</if>
+            update_time = sysdate()
+        </trim>
+        where stock_id = #{stockId}
+    </update>
+
+    <update id="updateStockQuantity">
+        update gi_stock set quantity = #{quantity}, update_time = sysdate() where stock_id = #{stockId}
+    </update>
+
+    <delete id="deleteGiStockById" parameterType="Long">
+        delete from gi_stock where stock_id = #{stockId}
+    </delete>
+
+    <insert id="batchInsertGiStock" parameterType="java.util.List">
+        insert into gi_stock (dept_id, sku_id, quantity, locked_qty, warning_qty, create_time) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.deptId}, #{item.skuId}, #{item.quantity}, #{item.lockedQty}, #{item.warningQty}, sysdate())
+        </foreach>
+    </insert>
+</mapper>

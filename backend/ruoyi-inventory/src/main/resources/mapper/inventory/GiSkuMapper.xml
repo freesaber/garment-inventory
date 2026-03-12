@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.inventory.mapper.GiSkuMapper">
+    
+    <resultMap type="GiSku" id="GiSkuResult">
+        <id     property="skuId"      column="sku_id"      />
+        <result property="goodsId"    column="goods_id"    />
+        <result property="skuCode"    column="sku_code"    />
+        <result property="color"      column="color"       />
+        <result property="size"       column="size"        />
+        <result property="barcode"    column="barcode"     />
+        <result property="price"      column="price"       />
+        <result property="status"     column="status"      />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="image"      column="image"       />
+        <result property="goodsName"  column="goods_name"  />
+        <result property="createBy"   column="create_by"   />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy"   column="update_by"   />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectGiSkuVo">
+        select s.sku_id, s.goods_id, s.sku_code, s.color, s.size, s.barcode, s.price, s.status, s.del_flag, s.image,
+               s.create_by, s.create_time, s.update_by, s.update_time, g.goods_name
+        from gi_sku s
+        left join gi_goods g on s.goods_id = g.goods_id
+    </sql>
+
+    <select id="selectGiSkuList" parameterType="GiSku" resultMap="GiSkuResult">
+        <include refid="selectGiSkuVo"/>
+        <where>
+            s.del_flag = '0'
+            <if test="goodsId != null">
+                AND s.goods_id = #{goodsId}
+            </if>
+            <if test="skuCode != null and skuCode != ''">
+                AND s.sku_code like concat('%', #{skuCode}, '%')
+            </if>
+            <if test="color != null and color != ''">
+                AND s.color = #{color}
+            </if>
+            <if test="size != null and size != ''">
+                AND s.size = #{size}
+            </if>
+            <if test="barcode != null and barcode != ''">
+                AND s.barcode = #{barcode}
+            </if>
+            <if test="status != null and status != ''">
+                AND s.status = #{status}
+            </if>
+        </where>
+        order by s.create_time desc
+    </select>
+
+    <select id="selectGiSkuById" parameterType="Long" resultMap="GiSkuResult">
+        <include refid="selectGiSkuVo"/>
+        where s.sku_id = #{skuId}
+    </select>
+
+    <select id="selectGiSkuByGoodsId" parameterType="Long" resultMap="GiSkuResult">
+        <include refid="selectGiSkuVo"/>
+        where s.goods_id = #{goodsId} and s.del_flag = '0'
+    </select>
+
+    <select id="selectGiSkuByBarcode" parameterType="String" resultMap="GiSkuResult">
+        <include refid="selectGiSkuVo"/>
+        where s.barcode = #{barcode} and s.del_flag = '0' limit 1
+    </select>
+
+    <select id="checkSkuCodeUnique" parameterType="String" resultMap="GiSkuResult">
+        select sku_id, sku_code from gi_sku where sku_code = #{skuCode} and del_flag = '0' limit 1
+    </select>
+
+    <insert id="insertGiSku" parameterType="GiSku" useGeneratedKeys="true" keyProperty="skuId">
+        insert into gi_sku
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="goodsId != null">goods_id,</if>
+            <if test="skuCode != null and skuCode != ''">sku_code,</if>
+            <if test="color != null">color,</if>
+            <if test="size != null">size,</if>
+            <if test="barcode != null">barcode,</if>
+            <if test="price != null">price,</if>
+            <if test="status != null">status,</if>
+            <if test="image != null">image,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="goodsId != null">#{goodsId},</if>
+            <if test="skuCode != null and skuCode != ''">#{skuCode},</if>
+            <if test="color != null">#{color},</if>
+            <if test="size != null">#{size},</if>
+            <if test="barcode != null">#{barcode},</if>
+            <if test="price != null">#{price},</if>
+            <if test="status != null">#{status},</if>
+            <if test="image != null">#{image},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateGiSku" parameterType="GiSku">
+        update gi_sku
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="goodsId != null">goods_id = #{goodsId},</if>
+            <if test="skuCode != null and skuCode != ''">sku_code = #{skuCode},</if>
+            <if test="color != null">color = #{color},</if>
+            <if test="size != null">size = #{size},</if>
+            <if test="barcode != null">barcode = #{barcode},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        where sku_id = #{skuId}
+    </update>
+
+    <delete id="deleteGiSkuById" parameterType="Long">
+        update gi_sku set del_flag = '1' where sku_id = #{skuId}
+    </delete>
+
+    <delete id="deleteGiSkuByIds" parameterType="String">
+        update gi_sku set del_flag = '1' where sku_id in
+        <foreach item="skuId" collection="array" open="(" separator="," close=")">
+            #{skuId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteGiSkuByGoodsId" parameterType="Long">
+        update gi_sku set del_flag = '1' where goods_id = #{goodsId}
+    </delete>
+</mapper>
