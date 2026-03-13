@@ -33,6 +33,9 @@
             <if test="supplierId != null">
                 AND p.supplier_id = #{supplierId}
             </if>
+            <if test="deptId != null">
+                AND p.dept_id = #{deptId}
+            </if>
             <if test="status != null and status != ''">
                 AND p.status = #{status}
             </if>

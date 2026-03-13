@@ -39,10 +39,13 @@
             <if test="transferNo != null and transferNo != ''">
                 AND t.transfer_no like concat('%', #{transferNo}, '%')
             </if>
-            <if test="deptIdOut != null">
+            <if test="deptIdOut != null and deptIdIn != null">
+                AND (t.dept_id_out = #{deptIdOut} OR t.dept_id_in = #{deptIdIn})
+            </if>
+            <if test="deptIdOut != null and deptIdIn == null">
                 AND t.dept_id_out = #{deptIdOut}
             </if>
-            <if test="deptIdIn != null">
+            <if test="deptIdIn != null and deptIdOut == null">
                 AND t.dept_id_in = #{deptIdIn}
             </if>
             <if test="status != null and status != ''">

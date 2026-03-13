@@ -9,6 +9,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.inventory.domain.GiPurchase;
 import com.ruoyi.inventory.service.IGiPurchaseService;
 
@@ -22,6 +23,11 @@ public class GiPurchaseController extends BaseController {
     @PreAuthorize("@ss.hasPermi('inventory:purchase:query')")
     @GetMapping("/list")
     public TableDataInfo list(GiPurchase giPurchase) {
+        // 数据权限：根据当前用户部门过滤
+        Long deptId = SecurityUtils.getLoginUser().getDeptId();
+        if (giPurchase.getDeptId() == null) {
+            giPurchase.setDeptId(deptId);
+        }
         startPage();
         List<GiPurchase> list = giPurchaseService.selectGiPurchaseList(giPurchase);
         return getDataTable(list);

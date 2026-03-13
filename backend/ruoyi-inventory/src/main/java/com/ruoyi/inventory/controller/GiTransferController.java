@@ -9,6 +9,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.inventory.domain.GiTransfer;
 import com.ruoyi.inventory.service.IGiTransferService;
 
@@ -22,6 +23,13 @@ public class GiTransferController extends BaseController {
     @PreAuthorize("@ss.hasPermi('inventory:transfer:query')")
     @GetMapping("/list")
     public TableDataInfo list(GiTransfer giTransfer) {
+        // 数据权限：查询与当前用户部门相关的调拨单（调出或调入）
+        Long deptId = SecurityUtils.getLoginUser().getDeptId();
+        if (giTransfer.getDeptIdOut() == null && giTransfer.getDeptIdIn() == null) {
+            // 如果没有指定门店，则查询与当前用户部门相关的调拨单
+            giTransfer.setDeptIdOut(deptId);
+            giTransfer.setDeptIdIn(deptId);
+        }
         startPage();
         List<GiTransfer> list = giTransferService.selectGiTransferList(giTransfer);
         return getDataTable(list);
