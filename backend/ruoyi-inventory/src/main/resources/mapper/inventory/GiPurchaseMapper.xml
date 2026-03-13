@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.inventory.mapper.GiPurchaseMapper">
+    
+    <resultMap type="GiPurchase" id="GiPurchaseResult">
+        <id     property="purchaseId"    column="purchase_id"    />
+        <result property="purchaseNo"    column="purchase_no"    />
+        <result property="supplierId"    column="supplier_id"    />
+        <result property="supplierName"  column="supplier_name"  />
+        <result property="deptId"        column="dept_id"        />
+        <result property="deptName"      column="dept_name"      />
+        <result property="totalAmount"   column="total_amount"   />
+        <result property="status"        column="status"         />
+        <result property="remark"        column="remark"         />
+        <result property="createBy"      column="create_by"      />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectGiPurchaseVo">
+        select p.purchase_id, p.purchase_no, p.supplier_id, s.supplier_name, p.dept_id, d.dept_name,
+               p.total_amount, p.status, p.remark, p.create_by, p.create_time
+        from gi_purchase p
+        left join gi_supplier s on p.supplier_id = s.supplier_id
+        left join sys_dept d on p.dept_id = d.dept_id
+    </sql>
+
+    <select id="selectGiPurchaseList" parameterType="GiPurchase" resultMap="GiPurchaseResult">
+        <include refid="selectGiPurchaseVo"/>
+        <where>
+            <if test="purchaseNo != null and purchaseNo != ''">
+                AND p.purchase_no like concat('%', #{purchaseNo}, '%')
+            </if>
+            <if test="supplierId != null">
+                AND p.supplier_id = #{supplierId}
+            </if>
+            <if test="status != null and status != ''">
+                AND p.status = #{status}
+            </if>
+        </where>
+        order by p.create_time desc
+    </select>
+
+    <select id="selectGiPurchaseById" parameterType="Long" resultMap="GiPurchaseResult">
+        <include refid="selectGiPurchaseVo"/>
+        where p.purchase_id = #{purchaseId}
+    </select>
+
+    <select id="generatePurchaseNo" resultType="String">
+        select concat('P', date_format(now(), '%Y%m%d'), lpad(ifnull(max(right(purchase_no, 4)), 0) + 1, 4, '0'))
+        from gi_purchase
+        where purchase_no like concat('P', date_format(now(), '%Y%m%d'), '%')
+    </select>
+
+    <insert id="insertGiPurchase" parameterType="GiPurchase" useGeneratedKeys="true" keyProperty="purchaseId">
+        insert into gi_purchase
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="purchaseNo != null">purchase_no,</if>
+            <if test="supplierId != null">supplier_id,</if>
+            <if test="deptId != null">dept_id,</if>
+            <if test="totalAmount != null">total_amount,</if>
+            <if test="status != null">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="purchaseNo != null">#{purchaseNo},</if>
+            <if test="supplierId != null">#{supplierId},</if>
+            <if test="deptId != null">#{deptId},</if>
+            <if test="totalAmount != null">#{totalAmount},</if>
+            <if test="status != null">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateGiPurchase" parameterType="GiPurchase">
+        update gi_purchase
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where purchase_id = #{purchaseId}
+    </update>
+
+    <delete id="deleteGiPurchaseByIds" parameterType="String">
+        delete from gi_purchase where purchase_id in
+        <foreach item="purchaseId" collection="array" open="(" separator="," close=")">
+            #{purchaseId}
+        </foreach>
+    </delete>
+</mapper>
