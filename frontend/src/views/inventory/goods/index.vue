@@ -155,17 +155,17 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="颜色">
-              <el-checkbox-group v-model="selectedColors">
-                <el-checkbox v-for="color in colorOptions" :key="color.value" :label="color.label">
-                  {{ color.label }}
+              <el-checkbox-group v-model="selectedColorCodes">
+                <el-checkbox v-for="color in colorOptions" :key="color.specCode" :label="color.specCode">
+                  {{ color.valueName }}
                 </el-checkbox>
               </el-checkbox-group>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="尺码">
-              <el-checkbox-group v-model="selectedSizes">
-                <el-checkbox v-for="size in sizeOptions" :key="size.value" :label="size.label">{{ size.label }}</el-checkbox>
+              <el-checkbox-group v-model="selectedSizeCodes">
+                <el-checkbox v-for="size in sizeOptions" :key="size.specCode" :label="size.specCode">{{ size.valueName }}</el-checkbox>
               </el-checkbox-group>
             </el-form-item>
           </el-col>
@@ -174,8 +174,8 @@
         <!-- SKU 表格 -->
         <el-divider content-position="left">SKU 列表 ({{ skuTable.length }} 个)</el-divider>
         <el-table :data="skuTable" border size="small" max-height="300">
-          <el-table-column label="颜色" align="center" prop="color" width="100" />
-          <el-table-column label="尺码" align="center" prop="size" width="80" />
+          <el-table-column label="颜色" align="center" prop="colorName" width="100" />
+          <el-table-column label="尺码" align="center" prop="sizeName" width="80" />
           <el-table-column label="SKU编码" align="center" prop="skuCode" width="180" />
           <el-table-column label="条码" align="center" width="150">
             <template #default="scope">
@@ -214,22 +214,13 @@
           <el-button type="primary" @click="applyBatchPrintCount">应用到所有</el-button>
         </el-form-item>
       </el-form>
-      
-      <el-form :inline="true" size="small" style="margin-bottom: 15px">
-        <el-form-item label="批量设置打印数量">
-          <el-input-number v-model="batchPrintCount" :min="1" :max="100" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="applyBatchPrintCount">应用到所有</el-button>
-        </el-form-item>
-      </el-form>
 
       <el-table :data="printList" border max-height="400">
         <el-table-column label="商品编码" align="center" prop="goodsCode" width="120" />
         <el-table-column label="商品名称" align="center" prop="goodsName" :show-overflow-tooltip="true" />
         <el-table-column label="SKU编码" align="center" prop="skuCode" width="150" />
-        <el-table-column label="颜色" align="center" prop="color" width="80" />
-        <el-table-column label="尺码" align="center" prop="size" width="80" />
+        <el-table-column label="颜色" align="center" prop="colorName" width="80" />
+        <el-table-column label="尺码" align="center" prop="sizeName" width="80" />
         <el-table-column label="销售价" align="center" width="100">
           <template #default="scope">¥{{ scope.row.salePrice || 0 }}</template>
         </el-table-column>
@@ -264,6 +255,7 @@
 import { listGoods, getGoods, delGoods, addGoods, updateGoods } from "@/api/inventory/goods"
 import { listCategoryAll } from "@/api/inventory/category"
 import { listBrandAll } from "@/api/inventory/brand"
+import { listSpecValuesByCode } from "@/api/inventory/spec"
 import { io, Socket } from "socket.io-client"
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance
@@ -284,14 +276,17 @@ const totalPrintCount = computed(() => {
   return printList.value.reduce((sum, item) => sum + (item.printCount || 0), 0)
 })
 
-// 使用字典获取颜色和尺码
-const { gi_color, gi_size } = proxy?.useDict("gi_color", "gi_size") || {}
+// 规格选项（从数据库加载，包含编码）
+const colorOptions = ref<any[]>([])  // 颜色选项（含 specCode: 01,02...）
+const sizeOptions = ref<any[]>([])   // 尺码选项（含 specCode: XS,S,M...）
+const colorCodeMap = ref<Map<string, string>>(new Map())  // specCode -> valueName
+const sizeCodeMap = ref<Map<string, string>>(new Map())   // specCode -> valueName
 
 const goodsList = ref<any[]>([])
 const categoryOptions = ref<any[]>([])
 const brandOptions = ref<any[]>([])
-const selectedColors = ref<string[]>([])
-const selectedSizes = ref<string[]>([])
+const selectedColorCodes = ref<string[]>([])  // 选中的颜色编码
+const selectedSizeCodes = ref<string[]>([])   // 选中的尺码编码
 const skuTable = ref<any[]>([])
 const open = ref(false)
 const loading = ref(true)
@@ -301,10 +296,6 @@ const single = ref(true)
 const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
-
-// 计算属性：从字典获取颜色和尺码选项
-const colorOptions = computed(() => gi_color?.value || [])
-const sizeOptions = computed(() => gi_size?.value || [])
 
 const data = reactive<any>({
   form: {},
@@ -317,28 +308,66 @@ const data = reactive<any>({
 
 const { queryParams, form, rules } = toRefs(data)
 
+// 加载颜色规格值（含编码）
+const loadColorOptions = async () => {
+  try {
+    const res = await listSpecValuesByCode('color')
+    colorOptions.value = res.data || []
+    // 构建编码->名称映射
+    colorCodeMap.value.clear()
+    colorOptions.value.forEach((item: any) => {
+      colorCodeMap.value.set(item.specCode, item.valueName)
+    })
+  } catch (e) {
+    console.error('加载颜色选项失败', e)
+  }
+}
+
+// 加载尺码规格值（含编码）
+const loadSizeOptions = async () => {
+  try {
+    const res = await listSpecValuesByCode('size')
+    sizeOptions.value = res.data || []
+    // 构建编码->名称映射
+    sizeCodeMap.value.clear()
+    sizeOptions.value.forEach((item: any) => {
+      sizeCodeMap.value.set(item.specCode, item.valueName)
+    })
+  } catch (e) {
+    console.error('加载尺码选项失败', e)
+  }
+}
+
 // 监听颜色和尺码变化，自动生成SKU表格
-watch([selectedColors, selectedSizes], () => {
+watch([selectedColorCodes, selectedSizeCodes], () => {
   generateSkuTable()
 })
 
+// 生成SKU表格 - 使用编码
 const generateSkuTable = () => {
   skuTable.value = []
-  if (selectedColors.value.length === 0 && selectedSizes.value.length === 0) return
+  if (selectedColorCodes.value.length === 0 && selectedSizeCodes.value.length === 0) return
 
-  const colors = selectedColors.value.length > 0 ? selectedColors.value : ['']
-  const sizes = selectedSizes.value.length > 0 ? selectedSizes.value : ['']
+  const colorCodes = selectedColorCodes.value.length > 0 ? selectedColorCodes.value : ['']
+  const sizeCodes = selectedSizeCodes.value.length > 0 ? selectedSizeCodes.value : ['']
 
-  for (const color of colors) {
-    for (const size of sizes) {
-      const skuCode = `${form.value.goodsCode || 'NEW'}-${color}-${size}`
+  for (const colorCode of colorCodes) {
+    for (const sizeCode of sizeCodes) {
+      // SKU编码 = 款号 + 颜色编码(2位) + 尺码编码
+      // 例如：261T001 + 01 + S = 261T00101S
+      const skuCode = `${form.value.goodsCode || 'NEW'}${colorCode}${sizeCode}`
+      // 条码同SKU编码
+      const barcode = skuCode
+      
       skuTable.value.push({
-        color,
-        size,
+        color: colorCode,           // 存储编码
+        colorName: colorCodeMap.value.get(colorCode) || colorCode,  // 显示名称
+        size: sizeCode,             // 存储编码
+        sizeName: sizeCodeMap.value.get(sizeCode) || sizeCode,      // 显示名称
         skuCode,
+        barcode,
         purchasePrice: form.value.purchasePrice || 0,
-        salePrice: form.value.salePrice || 0,
-        barcode: ''
+        salePrice: form.value.salePrice || 0
       })
     }
   }
@@ -379,8 +408,8 @@ const reset = () => {
     status: '0', 
     remark: undefined 
   }
-  selectedColors.value = []
-  selectedSizes.value = []
+  selectedColorCodes.value = []
+  selectedSizeCodes.value = []
   skuTable.value = []
   proxy?.resetForm("goodsRef")
 }
@@ -397,11 +426,17 @@ const handleUpdate = async (row: any) => {
   const res = await getGoods(goodsId)
   form.value = res.data
   if (res.data.skuList && res.data.skuList.length > 0) {
-    const colors = [...new Set(res.data.skuList.map((s: any) => s.color).filter(Boolean))]
-    const sizes = [...new Set(res.data.skuList.map((s: any) => s.size).filter(Boolean))]
-    selectedColors.value = colors
-    selectedSizes.value = sizes
-    skuTable.value = res.data.skuList
+    // 从SKU中提取已选的颜色编码和尺码编码
+    const colorCodes = [...new Set(res.data.skuList.map((s: any) => s.color).filter(Boolean))]
+    const sizeCodes = [...new Set(res.data.skuList.map((s: any) => s.size).filter(Boolean))]
+    selectedColorCodes.value = colorCodes
+    selectedSizeCodes.value = sizeCodes
+    // 转换SKU列表，添加显示名称
+    skuTable.value = res.data.skuList.map((s: any) => ({
+      ...s,
+      colorName: colorCodeMap.value.get(s.color) || s.color,
+      sizeName: sizeCodeMap.value.get(s.size) || s.size
+    }))
   }
   open.value = true
   title.value = "修改商品"
@@ -410,7 +445,16 @@ const handleUpdate = async (row: any) => {
 const submitForm = () => {
   (proxy?.$refs["goodsRef"] as any).validate(async (valid: boolean) => {
     if (valid) {
-      form.value.skuList = skuTable.value
+      // 提交时只发送编码，不发送名称
+      form.value.skuList = skuTable.value.map((s: any) => ({
+        skuId: s.skuId,
+        color: s.color,
+        size: s.size,
+        skuCode: s.skuCode,
+        barcode: s.barcode,
+        purchasePrice: s.purchasePrice,
+        salePrice: s.salePrice
+      }))
       if (form.value.goodsId != undefined) {
         await updateGoods(form.value)
         proxy?.$modal.msgSuccess("修改成功")
@@ -440,10 +484,6 @@ const handleStatusChange = async (row: any) => {
     proxy?.$modal.msgSuccess(text + "成功")
   } catch { row.status = row.status === "0" ? "1" : "0" }
 }
-
-getCategoryList()
-getBrandList()
-getList()
 
 // ==================== 打印吊牌功能 ====================
 
@@ -494,7 +534,9 @@ const handlePrint = async () => {
           skuCode: sku.skuCode,
           barcode: sku.barcode,
           color: sku.color,
+          colorName: colorCodeMap.value.get(sku.color) || sku.color,
           size: sku.size,
+          sizeName: sizeCodeMap.value.get(sku.size) || sku.size,
           salePrice: sku.salePrice || res.data.salePrice,
           printCount: 1
         })
@@ -526,8 +568,8 @@ const generateTagHTML = (item: any): string => {
       <div style="font-size: 14px; font-weight: bold; margin-bottom: 2mm;">${item.brandName || ''}</div>
       <div style="font-size: 12px; margin-bottom: 2mm;">${item.goodsName}</div>
       <div style="font-size: 10px; margin-bottom: 2mm;">
-        <span>颜色: ${item.color || '-'}</span>
-        <span style="margin-left: 3mm;">尺码: ${item.size || '-'}</span>
+        <span>颜色: ${item.colorName || '-'}</span>
+        <span style="margin-left: 3mm;">尺码: ${item.sizeName || '-'}</span>
       </div>
       <div style="font-size: 10px; font-family: monospace; margin-bottom: 2mm;">${item.barcode || item.skuCode}</div>
       <div style="font-size: 16px; font-weight: bold; color: #c00;">¥${item.salePrice || 0}</div>
@@ -555,7 +597,7 @@ const executePrint = async () => {
   let successCount = 0
   let failCount = 0
 
-  // 递归打印函数，每500ms发送一个打印任务
+  // 递归打印函数
   const printNext = () => {
     if (currentPrintIndex >= toPrintItems.length) {
       // 打印完成
@@ -598,4 +640,11 @@ const executePrint = async () => {
 
   printNext()
 }
+
+// 初始化
+loadColorOptions()
+loadSizeOptions()
+getCategoryList()
+getBrandList()
+getList()
 </script>

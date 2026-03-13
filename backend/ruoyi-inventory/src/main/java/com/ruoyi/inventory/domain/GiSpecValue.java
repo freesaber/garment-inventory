@@ -26,6 +26,9 @@ public class GiSpecValue extends BaseEntity implements Serializable {
     @Excel(name = "规格值编码")
     private String valueCode;
 
+    /** 规格编码（颜色编码01-10，尺码编码XS/S/M/L等） */
+    private String specCode;
+
     /** 颜色十六进制值 */
     private String colorHex;
 
@@ -70,6 +73,14 @@ public class GiSpecValue extends BaseEntity implements Serializable {
 
     public void setValueCode(String valueCode) {
         this.valueCode = valueCode;
+    }
+
+    public String getSpecCode() {
+        return specCode;
+    }
+
+    public void setSpecCode(String specCode) {
+        this.specCode = specCode;
     }
 
     public String getColorHex() {

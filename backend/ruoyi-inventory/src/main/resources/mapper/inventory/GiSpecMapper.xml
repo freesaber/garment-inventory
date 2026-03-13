@@ -20,6 +20,7 @@
         <result property="specId"      column="spec_id"      />
         <result property="valueName"   column="value_name"   />
         <result property="valueCode"   column="value_code"   />
+        <result property="specCode"    column="spec_code"    />
         <result property="colorHex"    column="color_hex"    />
         <result property="sort"        column="sort"         />
         <result property="status"      column="status"       />
@@ -114,7 +115,7 @@
 
     <!-- 规格值相关 -->
     <sql id="selectGiSpecValueVo">
-        select value_id, spec_id, value_name, value_code, color_hex, sort, status, del_flag, create_by, create_time, update_by, update_time
+        select value_id, spec_id, value_name, value_code, spec_code, color_hex, sort, status, del_flag, create_by, create_time, update_by, update_time
         from gi_spec_value
     </sql>
 
@@ -142,7 +143,7 @@
     </select>
 
     <select id="selectGiSpecValueBySpecCode" parameterType="String" resultMap="GiSpecValueResult">
-        select sv.value_id, sv.spec_id, sv.value_name, sv.value_code, sv.color_hex, sv.sort, sv.status, sv.del_flag, sv.create_by, sv.create_time, sv.update_by, sv.update_time
+        select sv.value_id, sv.spec_id, sv.value_name, sv.value_code, sv.spec_code, sv.color_hex, sv.sort, sv.status, sv.del_flag, sv.create_by, sv.create_time, sv.update_by, sv.update_time
         from gi_spec_value sv
         left join gi_spec s on sv.spec_id = s.spec_id
         where sv.del_flag = '0' and sv.status = '0' and s.del_flag = '0' and s.status = '0' and s.spec_code = #{specCode}
