@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.inventory.mapper.GiSaleItemMapper">
+    
+    <resultMap type="GiSaleItem" id="GiSaleItemResult">
+        <id     property="itemId"    column="item_id"    />
+        <result property="saleId"    column="sale_id"    />
+        <result property="skuId"     column="sku_id"     />
+        <result property="skuCode"   column="sku_code"   />
+        <result property="goodsName" column="goods_name" />
+        <result property="color"     column="color"      />
+        <result property="size"      column="size"       />
+        <result property="price"     column="price"      />
+        <result property="quantity"  column="quantity"   />
+        <result property="amount"    column="amount"     />
+    </resultMap>
+
+    <select id="selectBySaleId" parameterType="Long" resultMap="GiSaleItemResult">
+        select item_id, sale_id, sku_id, sku_code, goods_name, color, size, price, quantity, amount
+        from gi_sale_item
+        where sale_id = #{saleId}
+        order by item_id
+    </select>
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into gi_sale_item (sale_id, sku_id, sku_code, goods_name, color, size, price, quantity, amount) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.saleId}, #{item.skuId}, #{item.skuCode}, #{item.goodsName}, #{item.color}, #{item.size}, #{item.price}, #{item.quantity}, #{item.amount})
+        </foreach>
+    </insert>
+
+    <delete id="deleteBySaleId" parameterType="Long">
+        delete from gi_sale_item where sale_id = #{saleId}
+    </delete>
+</mapper>
