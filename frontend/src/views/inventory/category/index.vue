@@ -57,7 +57,7 @@
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form :model="form" :rules="rules" ref="categoryRef" label-width="80px">
         <el-form-item label="品类编码" prop="kindCode">
-          <el-input v-model="form.kindCode" placeholder="如: T= T恤" maxlength="5" :disabled="form.categoryId != undefined" />
+          <el-input v-model="form.kindCode" placeholder="如: T= T恤" maxlength="5" />
         </el-form-item>
         <el-form-item label="品类名称" prop="categoryName">
           <el-input v-model="form.categoryName" placeholder="请输入品类名称" maxlength="50" />
