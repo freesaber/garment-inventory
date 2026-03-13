@@ -204,7 +204,7 @@
 
     <!-- 打印吊牌对话框 -->
     <el-dialog title="打印吊牌" v-model="printOpen" width="900px" append-to-body>
-      <el-alert title="提示：点击确认后，将按设置的数量批量打印吊牌，打印服务需启动在 ws://localhost:8765" type="info" :closable="false" style="margin-bottom: 15px" />
+      <el-alert title="提示：点击确认后，将按设置的数量批量打印吊牌，打印服务需启动 tag-printer（ws://localhost:5597）" type="info" :closable="false" style="margin-bottom: 15px" />
       
       <el-form :inline="true" size="small" style="margin-bottom: 15px">
         <el-form-item label="批量设置打印数量">
@@ -256,13 +256,11 @@ import { listGoods, getGoods, delGoods, addGoods, updateGoods } from "@/api/inve
 import { listCategoryAll } from "@/api/inventory/category"
 import { listBrandAll } from "@/api/inventory/brand"
 import { listSpecValuesByCode } from "@/api/inventory/spec"
-import { io, Socket } from "socket.io-client"
-
 const { proxy } = getCurrentInstance() as ComponentInternalInstance
 
 // ==================== 打印相关配置 ====================
-const PRINTER_WS_URL = "ws://localhost:8765"  // 打印服务 WebSocket 地址
-let printSocket: Socket | null = null
+const PRINTER_WS_URL = "ws://localhost:5597"  // tag-printer 打印服务地址
+let printSocket: WebSocket | null = null
 
 // 打印相关状态
 const printOpen = ref(false)
@@ -490,25 +488,25 @@ const handleStatusChange = async (row: any) => {
 // 连接打印服务
 const connectPrinter = (): Promise<boolean> => {
   return new Promise((resolve) => {
-    if (printSocket && printSocket.connected) {
+    if (printSocket && printSocket.readyState === WebSocket.OPEN) {
       resolve(true)
       return
     }
 
-    printSocket = io(PRINTER_WS_URL, {
-      transports: ['websocket'],
-      reconnection: false,
-      timeout: 5000
-    })
+    printSocket = new WebSocket(PRINTER_WS_URL)
 
-    printSocket.on('connect', () => {
+    printSocket.onopen = () => {
       resolve(true)
-    })
+    }
 
-    printSocket.on('connect_error', () => {
-      proxy?.$modal.msgError("无法连接打印服务，请确保打印服务已启动（ws://localhost:8765）")
+    printSocket.onerror = () => {
+      proxy?.$modal.msgError("无法连接打印服务，请确保 tag-printer 已启动（ws://localhost:5597）")
       resolve(false)
-    })
+    }
+
+    printSocket.onclose = () => {
+      printSocket = null
+    }
   })
 }
 
@@ -561,19 +559,61 @@ const applyBatchPrintCount = () => {
   })
 }
 
-// 生成吊牌 HTML
+// 生成吊牌 HTML（适配 tag-printer）
 const generateTagHTML = (item: any): string => {
   return `
-    <div style="width: 80mm; padding: 3mm; font-family: 'Microsoft YaHei', sans-serif; text-align: center;">
-      <div style="font-size: 14px; font-weight: bold; margin-bottom: 2mm;">${item.brandName || ''}</div>
-      <div style="font-size: 12px; margin-bottom: 2mm;">${item.goodsName}</div>
-      <div style="font-size: 10px; margin-bottom: 2mm;">
-        <span>颜色: ${item.colorName || '-'}</span>
-        <span style="margin-left: 3mm;">尺码: ${item.sizeName || '-'}</span>
-      </div>
-      <div style="font-size: 10px; font-family: monospace; margin-bottom: 2mm;">${item.barcode || item.skuCode}</div>
-      <div style="font-size: 16px; font-weight: bold; color: #c00;">¥${item.salePrice || 0}</div>
-    </div>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      padding: 2mm;
+      font-family: 'Microsoft YaHei', sans-serif;
+      text-align: center;
+      font-size: 12px;
+    }
+    .brand {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 2mm;
+    }
+    .name {
+      font-size: 11px;
+      margin-bottom: 2mm;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .info {
+      font-size: 10px;
+      color: #666;
+      margin-bottom: 2mm;
+    }
+    .barcode {
+      font-size: 10px;
+      font-family: monospace;
+      margin-bottom: 2mm;
+    }
+    .price {
+      font-size: 16px;
+      font-weight: bold;
+      color: #c00;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">${item.brandName || ''}</div>
+  <div class="name">${item.goodsName}</div>
+  <div class="info">
+    <span>颜色: ${item.colorName || '-'}</span>
+    <span style="margin-left: 3mm;">尺码: ${item.sizeName || '-'}</span>
+  </div>
+  <div class="barcode">${item.barcode || item.skuCode}</div>
+  <div class="price">¥${item.salePrice || 0}</div>
+</body>
+</html>
   `
 }
 
@@ -595,15 +635,14 @@ const executePrint = async () => {
 
   let currentPrintIndex = 0
   let successCount = 0
-  let failCount = 0
 
   // 递归打印函数
   const printNext = () => {
     if (currentPrintIndex >= toPrintItems.length) {
       // 打印完成
       printStatus.value = "done"
-      printSocket?.disconnect()
-      proxy?.$modal.msgSuccess(`打印完成！成功 ${successCount} 张，失败 ${failCount} 张`)
+      printSocket?.close()
+      proxy?.$modal.msgSuccess(`打印完成！成功 ${successCount} 张`)
       return
     }
 
@@ -621,11 +660,8 @@ const executePrint = async () => {
 
       const html = generateTagHTML(item)
       
-      printSocket?.emit('print', {
-        id: `${item.skuCode}-${Date.now()}-${itemPrinted}`,
-        content: html,
-        options: { width: 80, height: 50 }
-      })
+      // tag-printer: 直接发送 HTML 字符串
+      printSocket?.send(html)
 
       itemPrinted++
       printProgress.value++
