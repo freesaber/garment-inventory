@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.inventory.mapper.GiTransferMapper">
+    
+    <resultMap type="GiTransfer" id="GiTransferResult">
+        <id     property="transferId"   column="transfer_id"   />
+        <result property="transferNo"   column="transfer_no"   />
+        <result property="deptIdOut"    column="dept_id_out"   />
+        <result property="deptNameOut"  column="dept_name_out" />
+        <result property="deptIdIn"     column="dept_id_in"    />
+        <result property="deptNameIn"   column="dept_name_in"  />
+        <result property="totalQty"     column="total_qty"     />
+        <result property="status"       column="status"        />
+        <result property="auditBy"      column="audit_by"      />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="outBy"        column="out_by"        />
+        <result property="outTime"      column="out_time"      />
+        <result property="inBy"         column="in_by"         />
+        <result property="inTime"       column="in_time"       />
+        <result property="remark"       column="remark"        />
+        <result property="createBy"     column="create_by"     />
+        <result property="createTime"   column="create_time"   />
+        <result property="updateTime"   column="update_time"   />
+    </resultMap>
+
+    <sql id="selectGiTransferVo">
+        select t.transfer_id, t.transfer_no, t.dept_id_out, do1.dept_name as dept_name_out,
+               t.dept_id_in, do2.dept_name as dept_name_in, t.total_qty, t.status,
+               t.audit_by, t.audit_time, t.out_by, t.out_time, t.in_by, t.in_time,
+               t.remark, t.create_by, t.create_time, t.update_time
+        from gi_transfer t
+        left join sys_dept do1 on t.dept_id_out = do1.dept_id
+        left join sys_dept do2 on t.dept_id_in = do2.dept_id
+    </sql>
+
+    <select id="selectGiTransferList" parameterType="GiTransfer" resultMap="GiTransferResult">
+        <include refid="selectGiTransferVo"/>
+        <where>
+            <if test="transferNo != null and transferNo != ''">
+                AND t.transfer_no like concat('%', #{transferNo}, '%')
+            </if>
+            <if test="deptIdOut != null">
+                AND t.dept_id_out = #{deptIdOut}
+            </if>
+            <if test="deptIdIn != null">
+                AND t.dept_id_in = #{deptIdIn}
+            </if>
+            <if test="status != null and status != ''">
+                AND t.status = #{status}
+            </if>
+        </where>
+        order by t.create_time desc
+    </select>
+
+    <select id="selectGiTransferById" parameterType="Long" resultMap="GiTransferResult">
+        <include refid="selectGiTransferVo"/>
+        where t.transfer_id = #{transferId}
+    </select>
+
+    <select id="generateTransferNo" resultType="String">
+        select concat('DB', date_format(now(), '%Y%m%d'), lpad(ifnull(max(right(transfer_no, 4)), 0) + 1, 4, '0'))
+        from gi_transfer
+        where transfer_no like concat('DB', date_format(now(), '%Y%m%d'), '%')
+    </select>
+
+    <insert id="insertGiTransfer" parameterType="GiTransfer" useGeneratedKeys="true" keyProperty="transferId">
+        insert into gi_transfer
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="transferNo != null">transfer_no,</if>
+            <if test="deptIdOut != null">dept_id_out,</if>
+            <if test="deptIdIn != null">dept_id_in,</if>
+            <if test="totalQty != null">total_qty,</if>
+            <if test="status != null">status,</if>
+            <if test="auditBy != null">audit_by,</if>
+            <if test="auditTime != null">audit_time,</if>
+            <if test="outBy != null">out_by,</if>
+            <if test="outTime != null">out_time,</if>
+            <if test="inBy != null">in_by,</if>
+            <if test="inTime != null">in_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="transferNo != null">#{transferNo},</if>
+            <if test="deptIdOut != null">#{deptIdOut},</if>
+            <if test="deptIdIn != null">#{deptIdIn},</if>
+            <if test="totalQty != null">#{totalQty},</if>
+            <if test="status != null">#{status},</if>
+            <if test="auditBy != null">#{auditBy},</if>
+            <if test="auditTime != null">#{auditTime},</if>
+            <if test="outBy != null">#{outBy},</if>
+            <if test="outTime != null">#{outTime},</if>
+            <if test="inBy != null">#{inBy},</if>
+            <if test="inTime != null">#{inTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateGiTransfer" parameterType="GiTransfer">
+        update gi_transfer
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="auditBy != null">audit_by = #{auditBy},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="outBy != null">out_by = #{outBy},</if>
+            <if test="outTime != null">out_time = #{outTime},</if>
+            <if test="inBy != null">in_by = #{inBy},</if>
+            <if test="inTime != null">in_time = #{inTime},</if>
+            update_time = sysdate()
+        </trim>
+        where transfer_id = #{transferId}
+    </update>
+
+    <delete id="deleteGiTransferByIds" parameterType="Long">
+        delete from gi_transfer where transfer_id in
+        <foreach item="transferId" collection="array" open="(" separator="," close=")">
+            #{transferId}
+        </foreach>
+    </delete>
+</mapper>
