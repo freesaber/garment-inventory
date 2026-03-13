@@ -7,24 +7,21 @@ import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
- * 品牌对象 gi_brand
+ * 规格类型对象 gi_spec
  */
-public class GiBrand extends BaseEntity implements Serializable {
+public class GiSpec extends BaseEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** 品牌ID */
-    private Long brandId;
+    /** 规格ID */
+    private Long specId;
 
-    /** 品牌名称 */
-    @Excel(name = "品牌名称")
-    private String brandName;
+    /** 规格名称 */
+    @Excel(name = "规格名称")
+    private String specName;
 
-    /** 品牌编码 */
-    @Excel(name = "品牌编码")
-    private String brandCode;
-
-    /** 品牌Logo */
-    private String logo;
+    /** 规格编码 */
+    @Excel(name = "规格编码")
+    private String specCode;
 
     /** 排序 */
     @Excel(name = "排序")
@@ -37,36 +34,31 @@ public class GiBrand extends BaseEntity implements Serializable {
     /** 删除标志 */
     private String delFlag;
 
-    public Long getBrandId() {
-        return brandId;
+    /** 规格值列表 */
+    private List<GiSpecValue> values;
+
+    public Long getSpecId() {
+        return specId;
     }
 
-    public void setBrandId(Long brandId) {
-        this.brandId = brandId;
+    public void setSpecId(Long specId) {
+        this.specId = specId;
     }
 
-    public String getBrandName() {
-        return brandName;
+    public String getSpecName() {
+        return specName;
     }
 
-    public void setBrandName(String brandName) {
-        this.brandName = brandName;
+    public void setSpecName(String specName) {
+        this.specName = specName;
     }
 
-    public String getBrandCode() {
-        return brandCode;
+    public String getSpecCode() {
+        return specCode;
     }
 
-    public void setBrandCode(String brandCode) {
-        this.brandCode = brandCode;
-    }
-
-    public String getLogo() {
-        return logo;
-    }
-
-    public void setLogo(String logo) {
-        this.logo = logo;
+    public void setSpecCode(String specCode) {
+        this.specCode = specCode;
     }
 
     public Integer getSort() {
@@ -91,5 +83,13 @@ public class GiBrand extends BaseEntity implements Serializable {
 
     public void setDelFlag(String delFlag) {
         this.delFlag = delFlag;
+    }
+
+    public List<GiSpecValue> getValues() {
+        return values;
+    }
+
+    public void setValues(List<GiSpecValue> values) {
+        this.values = values;
     }
 }

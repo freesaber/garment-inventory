@@ -15,10 +15,11 @@
         <result property="unit"          column="unit"           />
         <result property="purchasePrice" column="purchase_price" />
         <result property="salePrice"     column="sale_price"     />
-        <result property="status"        column="status"         />
-        <result property="delFlag"       column="del_flag"       />
         <result property="mainImage"     column="main_image"     />
         <result property="images"        column="images"         />
+        <result property="description"   column="description"    />
+        <result property="status"        column="status"         />
+        <result property="delFlag"       column="del_flag"       />
         <result property="createBy"      column="create_by"      />
         <result property="createTime"    column="create_time"    />
         <result property="updateBy"      column="update_by"      />
@@ -29,8 +30,8 @@
     <sql id="selectGiGoodsVo">
         select g.goods_id, g.goods_code, g.goods_name, g.category_id, c.category_name,
                g.brand_id, b.brand_name, g.season, g.year, g.unit,
-               g.purchase_price, g.sale_price, g.status, g.del_flag,
-               g.main_image, g.images, g.create_by, g.create_time, g.update_by, g.update_time, g.remark
+               g.purchase_price, g.sale_price, g.main_image, g.images, g.description,
+               g.status, g.del_flag, g.create_by, g.create_time, g.update_by, g.update_time, g.remark
         from gi_goods g
         left join gi_category c on g.category_id = c.category_id
         left join gi_brand b on g.brand_id = b.brand_id
@@ -86,9 +87,10 @@
             <if test="unit != null">unit,</if>
             <if test="purchasePrice != null">purchase_price,</if>
             <if test="salePrice != null">sale_price,</if>
-            <if test="status != null">status,</if>
             <if test="mainImage != null">main_image,</if>
             <if test="images != null">images,</if>
+            <if test="description != null">description,</if>
+            <if test="status != null">status,</if>
             <if test="createBy != null">create_by,</if>
             <if test="remark != null">remark,</if>
             create_time
@@ -103,9 +105,10 @@
             <if test="unit != null">#{unit},</if>
             <if test="purchasePrice != null">#{purchasePrice},</if>
             <if test="salePrice != null">#{salePrice},</if>
-            <if test="status != null">#{status},</if>
             <if test="mainImage != null">#{mainImage},</if>
             <if test="images != null">#{images},</if>
+            <if test="description != null">#{description},</if>
+            <if test="status != null">#{status},</if>
             <if test="createBy != null">#{createBy},</if>
             <if test="remark != null">#{remark},</if>
             sysdate()
@@ -124,9 +127,10 @@
             <if test="unit != null">unit = #{unit},</if>
             <if test="purchasePrice != null">purchase_price = #{purchasePrice},</if>
             <if test="salePrice != null">sale_price = #{salePrice},</if>
-            <if test="status != null and status != ''">status = #{status},</if>
             <if test="mainImage != null">main_image = #{mainImage},</if>
             <if test="images != null">images = #{images},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="remark != null">remark = #{remark},</if>
             update_time = sysdate()
@@ -144,4 +148,10 @@
             #{goodsId}
         </foreach>
     </delete>
+
+    <select id="getMaxGoodsSeq" parameterType="String" resultType="int">
+        select IFNULL(MAX(CAST(SUBSTRING(goods_code, 5, 3) AS UNSIGNED)), 0)
+        from gi_goods
+        where goods_code like concat(#{prefix}, '%')
+    </select>
 </mapper>

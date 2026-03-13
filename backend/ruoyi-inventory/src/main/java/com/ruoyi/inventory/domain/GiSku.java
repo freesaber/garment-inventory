@@ -16,6 +16,7 @@ public class GiSku extends BaseEntity implements Serializable {
     private Long skuId;
 
     /** 商品ID */
+    @Excel(name = "商品ID")
     private Long goodsId;
 
     /** SKU编码 */
@@ -30,25 +31,33 @@ public class GiSku extends BaseEntity implements Serializable {
     @Excel(name = "尺码")
     private String size;
 
-    /** 条码 */
-    @Excel(name = "条码")
+    /** 条形码 */
+    @Excel(name = "条形码")
     private String barcode;
 
-    /** 售价 */
-    @Excel(name = "售价")
-    private BigDecimal price;
+    /** 进货价 */
+    @Excel(name = "进货价")
+    private BigDecimal purchasePrice;
+
+    /** 销售价 */
+    @Excel(name = "销售价")
+    private BigDecimal salePrice;
+
+    /** SKU图片 */
+    private String image;
 
     /** 状态 */
+    @Excel(name = "状态", readConverterExp = "0=正常,1=停用")
     private String status;
 
     /** 删除标志 */
     private String delFlag;
 
-    /** SKU图片 */
-    private String image;
-
-    /** 商品名称(关联查询) */
+    /** 商品名称（关联查询） */
     private String goodsName;
+
+    /** 商品编码（关联查询） */
+    private String goodsCode;
 
     public Long getSkuId() {
         return skuId;
@@ -98,12 +107,28 @@ public class GiSku extends BaseEntity implements Serializable {
         this.barcode = barcode;
     }
 
-    public BigDecimal getPrice() {
-        return price;
+    public BigDecimal getPurchasePrice() {
+        return purchasePrice;
     }
 
-    public void setPrice(BigDecimal price) {
-        this.price = price;
+    public void setPurchasePrice(BigDecimal purchasePrice) {
+        this.purchasePrice = purchasePrice;
+    }
+
+    public BigDecimal getSalePrice() {
+        return salePrice;
+    }
+
+    public void setSalePrice(BigDecimal salePrice) {
+        this.salePrice = salePrice;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 
     public String getStatus() {
@@ -122,19 +147,19 @@ public class GiSku extends BaseEntity implements Serializable {
         this.delFlag = delFlag;
     }
 
-    public String getImage() {
-        return image;
-    }
-
-    public void setImage(String image) {
-        this.image = image;
-    }
-
     public String getGoodsName() {
         return goodsName;
     }
 
     public void setGoodsName(String goodsName) {
         this.goodsName = goodsName;
+    }
+
+    public String getGoodsCode() {
+        return goodsCode;
+    }
+
+    public void setGoodsCode(String goodsCode) {
+        this.goodsCode = goodsCode;
     }
 }

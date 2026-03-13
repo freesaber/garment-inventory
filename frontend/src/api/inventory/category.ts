@@ -25,6 +25,14 @@ export function treeselect() {
   })
 }
 
+// 查询分类列表（扁平）
+export function listCategoryAll() {
+  return request({
+    url: '/inventory/category/listAll',
+    method: 'get'
+  })
+}
+
 // 新增分类
 export function addCategory(data: any) {
   return request({

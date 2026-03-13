@@ -36,10 +36,11 @@ public class GiGoods extends BaseEntity implements Serializable {
     private Long brandId;
 
     /** 品牌名称 */
+    @Excel(name = "品牌")
     private String brandName;
 
-    /** 季节 */
-    @Excel(name = "季节")
+    /** 季节（1春 2夏 3秋 4冬 5四季） */
+    @Excel(name = "季节", readConverterExp = "1=春,2=夏,3=秋,4=冬,5=四季")
     private String season;
 
     /** 年份 */
@@ -58,6 +59,15 @@ public class GiGoods extends BaseEntity implements Serializable {
     @Excel(name = "销售价")
     private BigDecimal salePrice;
 
+    /** 主图 */
+    private String mainImage;
+
+    /** 商品图片 */
+    private String images;
+
+    /** 商品描述 */
+    private String description;
+
     /** 状态 */
     @Excel(name = "状态", readConverterExp = "0=正常,1=停用")
     private String status;
@@ -65,14 +75,14 @@ public class GiGoods extends BaseEntity implements Serializable {
     /** 删除标志 */
     private String delFlag;
 
-    /** 主图 */
-    private String mainImage;
-
-    /** 商品图片 */
-    private String images;
-
     /** SKU列表 */
     private List<GiSku> skuList;
+
+    /** 选中的颜色（用于前端） */
+    private String[] colors;
+
+    /** 选中的尺码（用于前端） */
+    private String[] sizes;
 
     public Long getGoodsId() {
         return goodsId;
@@ -170,22 +180,6 @@ public class GiGoods extends BaseEntity implements Serializable {
         this.salePrice = salePrice;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getDelFlag() {
-        return delFlag;
-    }
-
-    public void setDelFlag(String delFlag) {
-        this.delFlag = delFlag;
-    }
-
     public String getMainImage() {
         return mainImage;
     }
@@ -202,11 +196,51 @@ public class GiGoods extends BaseEntity implements Serializable {
         this.images = images;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getDelFlag() {
+        return delFlag;
+    }
+
+    public void setDelFlag(String delFlag) {
+        this.delFlag = delFlag;
+    }
+
     public List<GiSku> getSkuList() {
         return skuList;
     }
 
     public void setSkuList(List<GiSku> skuList) {
         this.skuList = skuList;
+    }
+
+    public String[] getColors() {
+        return colors;
+    }
+
+    public void setColors(String[] colors) {
+        this.colors = colors;
+    }
+
+    public String[] getSizes() {
+        return sizes;
+    }
+
+    public void setSizes(String[] sizes) {
+        this.sizes = sizes;
     }
 }

@@ -7,6 +7,7 @@
         <result property="parentId"     column="parent_id"     />
         <result property="categoryName" column="category_name" />
         <result property="sort"         column="sort"          />
+        <result property="kindCode"     column="kind_code"     />
         <result property="status"       column="status"        />
         <result property="delFlag"      column="del_flag"      />
         <result property="createBy"     column="create_by"     />
@@ -17,7 +18,7 @@
     </resultMap>
 
     <sql id="selectGiCategoryVo">
-        select category_id, parent_id, category_name, sort, status, del_flag, create_by, create_time, update_by, update_time, remark
+        select category_id, parent_id, category_name, sort, kind_code, status, del_flag, create_by, create_time, update_by, update_time, remark
         from gi_category
     </sql>
 
@@ -54,6 +55,7 @@
             <if test="parentId != null">parent_id,</if>
             <if test="categoryName != null and categoryName != ''">category_name,</if>
             <if test="sort != null">sort,</if>
+            <if test="kindCode != null and kindCode != ''">kind_code,</if>
             <if test="status != null">status,</if>
             <if test="delFlag != null">del_flag,</if>
             <if test="createBy != null">create_by,</if>
@@ -64,6 +66,7 @@
             <if test="parentId != null">#{parentId},</if>
             <if test="categoryName != null and categoryName != ''">#{categoryName},</if>
             <if test="sort != null">#{sort},</if>
+            <if test="kindCode != null and kindCode != ''">#{kindCode},</if>
             <if test="status != null">#{status},</if>
             <if test="delFlag != null">#{delFlag},</if>
             <if test="createBy != null">#{createBy},</if>
@@ -78,6 +81,7 @@
             <if test="parentId != null">parent_id = #{parentId},</if>
             <if test="categoryName != null and categoryName != ''">category_name = #{categoryName},</if>
             <if test="sort != null">sort = #{sort},</if>
+            <if test="kindCode != null and kindCode != ''">kind_code = #{kindCode},</if>
             <if test="status != null and status != ''">status = #{status},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="remark != null">remark = #{remark},</if>

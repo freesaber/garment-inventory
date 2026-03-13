@@ -51,3 +51,20 @@ export function exportGoods(query: any) {
     params: query
   })
 }
+
+// 查询SKU列表
+export function listSku(query: any) {
+  return request({
+    url: '/inventory/sku/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询SKU详情
+export function getSku(skuId: number) {
+  return request({
+    url: '/inventory/sku/' + skuId,
+    method: 'get'
+  })
+}

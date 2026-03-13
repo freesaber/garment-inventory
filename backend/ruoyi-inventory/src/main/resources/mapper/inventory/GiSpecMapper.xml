@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.inventory.mapper.GiSpecMapper">
+    
+    <resultMap type="GiSpec" id="GiSpecResult">
+        <id     property="specId"      column="spec_id"      />
+        <result property="specName"    column="spec_name"    />
+        <result property="specCode"    column="spec_code"    />
+        <result property="sort"        column="sort"         />
+        <result property="status"      column="status"       />
+        <result property="delFlag"     column="del_flag"     />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"  column="create_time"  />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"  column="update_time"  />
+    </resultMap>
+
+    <resultMap type="GiSpecValue" id="GiSpecValueResult">
+        <id     property="valueId"     column="value_id"     />
+        <result property="specId"      column="spec_id"      />
+        <result property="valueName"   column="value_name"   />
+        <result property="valueCode"   column="value_code"   />
+        <result property="colorHex"    column="color_hex"    />
+        <result property="sort"        column="sort"         />
+        <result property="status"      column="status"       />
+        <result property="delFlag"     column="del_flag"     />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"  column="create_time"  />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"  column="update_time"  />
+    </resultMap>
+
+    <sql id="selectGiSpecVo">
+        select spec_id, spec_name, spec_code, sort, status, del_flag, create_by, create_time, update_by, update_time
+        from gi_spec
+    </sql>
+
+    <select id="selectGiSpecList" parameterType="GiSpec" resultMap="GiSpecResult">
+        <include refid="selectGiSpecVo"/>
+        <where>
+            del_flag = '0'
+            <if test="specName != null and specName != ''">
+                AND spec_name like concat('%', #{specName}, '%')
+            </if>
+            <if test="specCode != null and specCode != ''">
+                AND spec_code = #{specCode}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by sort
+    </select>
+
+    <select id="selectAllGiSpecList" resultMap="GiSpecResult">
+        <include refid="selectGiSpecVo"/>
+        where del_flag = '0' and status = '0'
+        order by sort
+    </select>
+
+    <select id="selectGiSpecById" parameterType="Long" resultMap="GiSpecResult">
+        <include refid="selectGiSpecVo"/>
+        where spec_id = #{specId}
+    </select>
+
+    <select id="checkSpecCodeUnique" parameterType="String" resultMap="GiSpecResult">
+        <include refid="selectGiSpecVo"/>
+        where spec_code = #{specCode} and del_flag = '0' limit 1
+    </select>
+
+    <insert id="insertGiSpec" parameterType="GiSpec" useGeneratedKeys="true" keyProperty="specId">
+        insert into gi_spec
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="specName != null and specName != ''">spec_name,</if>
+            <if test="specCode != null and specCode != ''">spec_code,</if>
+            <if test="sort != null">sort,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="specName != null and specName != ''">#{specName},</if>
+            <if test="specCode != null and specCode != ''">#{specCode},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateGiSpec" parameterType="GiSpec">
+        update gi_spec
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="specName != null and specName != ''">spec_name = #{specName},</if>
+            <if test="specCode != null and specCode != ''">spec_code = #{specCode},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        where spec_id = #{specId}
+    </update>
+
+    <delete id="deleteGiSpecById" parameterType="Long">
+        update gi_spec set del_flag = '1' where spec_id = #{specId}
+    </delete>
+
+    <delete id="deleteGiSpecByIds" parameterType="String">
+        update gi_spec set del_flag = '1' where spec_id in
+        <foreach item="specId" collection="array" open="(" separator="," close=")">
+            #{specId}
+        </foreach>
+    </delete>
+
+    <!-- 规格值相关 -->
+    <sql id="selectGiSpecValueVo">
+        select value_id, spec_id, value_name, value_code, color_hex, sort, status, del_flag, create_by, create_time, update_by, update_time
+        from gi_spec_value
+    </sql>
+
+    <select id="selectGiSpecValueList" parameterType="GiSpecValue" resultMap="GiSpecValueResult">
+        <include refid="selectGiSpecValueVo"/>
+        <where>
+            del_flag = '0'
+            <if test="specId != null">
+                AND spec_id = #{specId}
+            </if>
+            <if test="valueName != null and valueName != ''">
+                AND value_name like concat('%', #{valueName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by sort
+    </select>
+
+    <select id="selectGiSpecValueBySpecId" parameterType="Long" resultMap="GiSpecValueResult">
+        <include refid="selectGiSpecValueVo"/>
+        where del_flag = '0' and status = '0' and spec_id = #{specId}
+        order by sort
+    </select>
+
+    <select id="selectGiSpecValueBySpecCode" parameterType="String" resultMap="GiSpecValueResult">
+        select sv.value_id, sv.spec_id, sv.value_name, sv.value_code, sv.color_hex, sv.sort, sv.status, sv.del_flag, sv.create_by, sv.create_time, sv.update_by, sv.update_time
+        from gi_spec_value sv
+        left join gi_spec s on sv.spec_id = s.spec_id
+        where sv.del_flag = '0' and sv.status = '0' and s.del_flag = '0' and s.status = '0' and s.spec_code = #{specCode}
+        order by sv.sort
+    </select>
+
+    <insert id="insertGiSpecValue" parameterType="GiSpecValue" useGeneratedKeys="true" keyProperty="valueId">
+        insert into gi_spec_value
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="specId != null">spec_id,</if>
+            <if test="valueName != null and valueName != ''">value_name,</if>
+            <if test="valueCode != null and valueCode != ''">value_code,</if>
+            <if test="colorHex != null and colorHex != ''">color_hex,</if>
+            <if test="sort != null">sort,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="specId != null">#{specId},</if>
+            <if test="valueName != null and valueName != ''">#{valueName},</if>
+            <if test="valueCode != null and valueCode != ''">#{valueCode},</if>
+            <if test="colorHex != null and colorHex != ''">#{colorHex},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateGiSpecValue" parameterType="GiSpecValue">
+        update gi_spec_value
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="specId != null">spec_id = #{specId},</if>
+            <if test="valueName != null and valueName != ''">value_name = #{valueName},</if>
+            <if test="valueCode != null and valueCode != ''">value_code = #{valueCode},</if>
+            <if test="colorHex != null and colorHex != ''">color_hex = #{colorHex},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        where value_id = #{valueId}
+    </update>
+
+    <delete id="deleteGiSpecValueById" parameterType="Long">
+        update gi_spec_value set del_flag = '1' where value_id = #{valueId}
+    </delete>
+</mapper>

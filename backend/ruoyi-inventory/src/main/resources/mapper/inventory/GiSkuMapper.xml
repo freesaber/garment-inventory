@@ -3,26 +3,30 @@
 <mapper namespace="com.ruoyi.inventory.mapper.GiSkuMapper">
     
     <resultMap type="GiSku" id="GiSkuResult">
-        <id     property="skuId"      column="sku_id"      />
-        <result property="goodsId"    column="goods_id"    />
-        <result property="skuCode"    column="sku_code"    />
-        <result property="color"      column="color"       />
-        <result property="size"       column="size"        />
-        <result property="barcode"    column="barcode"     />
-        <result property="price"      column="price"       />
-        <result property="status"     column="status"      />
-        <result property="delFlag"    column="del_flag"    />
-        <result property="image"      column="image"       />
-        <result property="goodsName"  column="goods_name"  />
-        <result property="createBy"   column="create_by"   />
-        <result property="createTime" column="create_time" />
-        <result property="updateBy"   column="update_by"   />
-        <result property="updateTime" column="update_time" />
+        <id     property="skuId"         column="sku_id"         />
+        <result property="goodsId"       column="goods_id"       />
+        <result property="skuCode"       column="sku_code"       />
+        <result property="color"         column="color"          />
+        <result property="size"          column="size"           />
+        <result property="barcode"       column="barcode"        />
+        <result property="purchasePrice" column="purchase_price" />
+        <result property="salePrice"     column="sale_price"     />
+        <result property="image"         column="image"          />
+        <result property="status"        column="status"         />
+        <result property="delFlag"       column="del_flag"       />
+        <result property="createBy"      column="create_by"      />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"      column="update_by"      />
+        <result property="updateTime"    column="update_time"    />
+        <result property="goodsName"     column="goods_name"     />
+        <result property="goodsCode"     column="goods_code"     />
     </resultMap>
 
     <sql id="selectGiSkuVo">
-        select s.sku_id, s.goods_id, s.sku_code, s.color, s.size, s.barcode, s.price, s.status, s.del_flag, s.image,
-               s.create_by, s.create_time, s.update_by, s.update_time, g.goods_name
+        select s.sku_id, s.goods_id, s.sku_code, s.color, s.size, s.barcode,
+               s.purchase_price, s.sale_price, s.image, s.status, s.del_flag,
+               s.create_by, s.create_time, s.update_by, s.update_time,
+               g.goods_name, g.goods_code
         from gi_sku s
         left join gi_goods g on s.goods_id = g.goods_id
     </sql>
@@ -34,17 +38,11 @@
             <if test="goodsId != null">
                 AND s.goods_id = #{goodsId}
             </if>
-            <if test="skuCode != null and skuCode != ''">
-                AND s.sku_code like concat('%', #{skuCode}, '%')
-            </if>
             <if test="color != null and color != ''">
                 AND s.color = #{color}
             </if>
             <if test="size != null and size != ''">
                 AND s.size = #{size}
-            </if>
-            <if test="barcode != null and barcode != ''">
-                AND s.barcode = #{barcode}
             </if>
             <if test="status != null and status != ''">
                 AND s.status = #{status}
@@ -61,11 +59,7 @@
     <select id="selectGiSkuByGoodsId" parameterType="Long" resultMap="GiSkuResult">
         <include refid="selectGiSkuVo"/>
         where s.goods_id = #{goodsId} and s.del_flag = '0'
-    </select>
-
-    <select id="selectGiSkuByBarcode" parameterType="String" resultMap="GiSkuResult">
-        <include refid="selectGiSkuVo"/>
-        where s.barcode = #{barcode} and s.del_flag = '0' limit 1
+        order by s.color, s.size
     </select>
 
     <select id="checkSkuCodeUnique" parameterType="String" resultMap="GiSkuResult">
@@ -80,9 +74,10 @@
             <if test="color != null">color,</if>
             <if test="size != null">size,</if>
             <if test="barcode != null">barcode,</if>
-            <if test="price != null">price,</if>
-            <if test="status != null">status,</if>
+            <if test="purchasePrice != null">purchase_price,</if>
+            <if test="salePrice != null">sale_price,</if>
             <if test="image != null">image,</if>
+            <if test="status != null">status,</if>
             <if test="createBy != null">create_by,</if>
             create_time
         </trim>
@@ -92,9 +87,10 @@
             <if test="color != null">#{color},</if>
             <if test="size != null">#{size},</if>
             <if test="barcode != null">#{barcode},</if>
-            <if test="price != null">#{price},</if>
-            <if test="status != null">#{status},</if>
+            <if test="purchasePrice != null">#{purchasePrice},</if>
+            <if test="salePrice != null">#{salePrice},</if>
             <if test="image != null">#{image},</if>
+            <if test="status != null">#{status},</if>
             <if test="createBy != null">#{createBy},</if>
             sysdate()
         </trim>
@@ -103,14 +99,14 @@
     <update id="updateGiSku" parameterType="GiSku">
         update gi_sku
         <trim prefix="SET" suffixOverrides=",">
-            <if test="goodsId != null">goods_id = #{goodsId},</if>
             <if test="skuCode != null and skuCode != ''">sku_code = #{skuCode},</if>
             <if test="color != null">color = #{color},</if>
             <if test="size != null">size = #{size},</if>
             <if test="barcode != null">barcode = #{barcode},</if>
-            <if test="price != null">price = #{price},</if>
-            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="purchasePrice != null">purchase_price = #{purchasePrice},</if>
+            <if test="salePrice != null">sale_price = #{salePrice},</if>
             <if test="image != null">image = #{image},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             update_time = sysdate()
         </trim>
@@ -121,14 +117,14 @@
         update gi_sku set del_flag = '1' where sku_id = #{skuId}
     </delete>
 
+    <delete id="deleteGiSkuByGoodsId" parameterType="Long">
+        update gi_sku set del_flag = '1' where goods_id = #{goodsId}
+    </delete>
+
     <delete id="deleteGiSkuByIds" parameterType="String">
         update gi_sku set del_flag = '1' where sku_id in
         <foreach item="skuId" collection="array" open="(" separator="," close=")">
             #{skuId}
         </foreach>
-    </delete>
-
-    <delete id="deleteGiSkuByGoodsId" parameterType="Long">
-        update gi_sku set del_flag = '1' where goods_id = #{goodsId}
     </delete>
 </mapper>

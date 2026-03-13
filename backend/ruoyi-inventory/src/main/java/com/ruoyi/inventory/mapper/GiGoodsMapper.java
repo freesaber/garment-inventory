@@ -4,7 +4,7 @@ import java.util.List;
 import com.ruoyi.inventory.domain.GiGoods;
 
 /**
- * 商品SPUMapper接口
+ * 商品Mapper接口
  */
 public interface GiGoodsMapper {
     
@@ -21,4 +21,9 @@ public interface GiGoodsMapper {
     public int deleteGiGoodsByIds(Long[] goodsIds);
 
     public GiGoods checkGoodsCodeUnique(String goodsCode);
+
+    /**
+     * 查询指定前缀的最大序号
+     */
+    public int getMaxGoodsSeq(String prefix);
 }

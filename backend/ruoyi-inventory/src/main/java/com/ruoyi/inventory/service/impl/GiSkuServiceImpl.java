@@ -25,7 +25,17 @@ public class GiSkuServiceImpl implements IGiSkuService {
 
     @Override
     public List<GiSku> selectGiSkuByGoodsId(Long goodsId) {
-        return giSkuMapper.selectGiSkuByGoodsId(goodsId);
+        GiSku query = new GiSku();
+        query.setGoodsId(goodsId);
+        return giSkuMapper.selectGiSkuList(query);
+    }
+
+    @Override
+    public GiSku selectGiSkuByBarcode(String barcode) {
+        GiSku query = new GiSku();
+        query.setBarcode(barcode);
+        List<GiSku> list = giSkuMapper.selectGiSkuList(query);
+        return list.isEmpty() ? null : list.get(0);
     }
 
     @Override
@@ -36,11 +46,6 @@ public class GiSkuServiceImpl implements IGiSkuService {
     @Override
     public int updateGiSku(GiSku giSku) {
         return giSkuMapper.updateGiSku(giSku);
-    }
-
-    @Override
-    public int deleteGiSkuById(Long skuId) {
-        return giSkuMapper.deleteGiSkuById(skuId);
     }
 
     @Override
@@ -56,10 +61,5 @@ public class GiSkuServiceImpl implements IGiSkuService {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public GiSku selectGiSkuByBarcode(String barcode) {
-        return giSkuMapper.selectGiSkuByBarcode(barcode);
     }
 }

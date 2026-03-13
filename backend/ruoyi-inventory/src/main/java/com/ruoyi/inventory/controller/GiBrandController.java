@@ -10,64 +10,53 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.inventory.domain.GiBrand;
-import com.ruoyi.inventory.service.IGiBrandService;
+import com.ruoyi.inventory.mapper.GiBrandMapper;
 
 @RestController
 @RequestMapping("/inventory/brand")
 public class GiBrandController extends BaseController {
 
     @Autowired
-    private IGiBrandService giBrandService;
+    private GiBrandMapper giBrandMapper;
 
     @PreAuthorize("@ss.hasPermi('inventory:brand:list')")
     @GetMapping("/list")
     public TableDataInfo list(GiBrand giBrand) {
         startPage();
-        List<GiBrand> list = giBrandService.selectGiBrandList(giBrand);
+        List<GiBrand> list = giBrandMapper.selectGiBrandList(giBrand);
         return getDataTable(list);
     }
 
+    @GetMapping("/listAll")
+    public AjaxResult listAll() {
+        List<GiBrand> list = giBrandMapper.selectGiBrandList(new GiBrand());
+        return success(list);
+    }
+
     @PreAuthorize("@ss.hasPermi('inventory:brand:query')")
-    @GetMapping(value = "/{brandId}")
-    public AjaxResult getInfo(@PathVariable("brandId") Long brandId) {
-        return success(giBrandService.selectGiBrandById(brandId));
+    @GetMapping("/{brandId}")
+    public AjaxResult getInfo(@PathVariable Long brandId) {
+        return success(giBrandMapper.selectGiBrandById(brandId));
     }
 
     @PreAuthorize("@ss.hasPermi('inventory:brand:add')")
-    @Log(title = "商品品牌", businessType = BusinessType.INSERT)
+    @Log(title = "品牌管理", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody GiBrand giBrand) {
-        if (!giBrandService.checkBrandNameUnique(giBrand)) {
-            return error("新增品牌'" + giBrand.getBrandName() + "'失败，品牌名称已存在");
-        }
-        giBrand.setCreateBy(getUsername());
-        return toAjax(giBrandService.insertGiBrand(giBrand));
+        return toAjax(giBrandMapper.insertGiBrand(giBrand));
     }
 
     @PreAuthorize("@ss.hasPermi('inventory:brand:edit')")
-    @Log(title = "商品品牌", businessType = BusinessType.UPDATE)
+    @Log(title = "品牌管理", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody GiBrand giBrand) {
-        if (!giBrandService.checkBrandNameUnique(giBrand)) {
-            return error("修改品牌'" + giBrand.getBrandName() + "'失败，品牌名称已存在");
-        }
-        giBrand.setUpdateBy(getUsername());
-        return toAjax(giBrandService.updateGiBrand(giBrand));
+        return toAjax(giBrandMapper.updateGiBrand(giBrand));
     }
 
     @PreAuthorize("@ss.hasPermi('inventory:brand:remove')")
-    @Log(title = "商品品牌", businessType = BusinessType.DELETE)
+    @Log(title = "品牌管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{brandIds}")
     public AjaxResult remove(@PathVariable Long[] brandIds) {
-        return toAjax(giBrandService.deleteGiBrandByIds(brandIds));
-    }
-
-    /**
-     * 获取品牌列表（不分页，用于下拉选择）
-     */
-    @GetMapping("/listAll")
-    public AjaxResult listAll() {
-        List<GiBrand> list = giBrandService.selectGiBrandList(new GiBrand());
-        return success(list);
+        return toAjax(giBrandMapper.deleteGiBrandByIds(brandIds));
     }
 }

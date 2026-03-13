@@ -4,15 +4,13 @@ import java.util.List;
 import com.ruoyi.inventory.domain.GiSku;
 
 /**
- * 商品SKUMapper接口
+ * SKU Mapper接口
  */
 public interface GiSkuMapper {
     
     public GiSku selectGiSkuById(Long skuId);
 
     public List<GiSku> selectGiSkuList(GiSku giSku);
-
-    public List<GiSku> selectGiSkuByGoodsId(Long goodsId);
 
     public int insertGiSku(GiSku giSku);
 
@@ -25,6 +23,4 @@ public interface GiSkuMapper {
     public int deleteGiSkuByGoodsId(Long goodsId);
 
     public GiSku checkSkuCodeUnique(String skuCode);
-
-    public GiSku selectGiSkuByBarcode(String barcode);
 }

@@ -26,93 +26,54 @@
       <el-col :span="1.5">
         <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['inventory:category:add']">新增</el-button>
       </el-col>
-      <el-col :span="1.5">
-        <el-button type="info" plain icon="Sort" @click="toggleExpandAll">展开/折叠</el-button>
-      </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table
-      v-if="refreshTable"
-      v-loading="loading"
-      :data="categoryList"
-      row-key="categoryId"
-      :default-expand-all="isExpandAll"
-      :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-    >
-      <el-table-column prop="categoryName" label="分类名称" :show-overflow-tooltip="true" />
+    <el-table v-loading="loading" :data="categoryList">
+      <el-table-column prop="kindCode" label="编码" width="80" align="center" />
+      <el-table-column prop="categoryName" label="品类名称" :show-overflow-tooltip="true" />
       <el-table-column prop="sort" label="排序" width="80" align="center" />
       <el-table-column prop="status" label="状态" width="80" align="center">
         <template #default="scope">
           <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createTime" width="200">
+      <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template #default="scope">
           <span>{{ parseTime(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="200">
+      <el-table-column label="操作" align="center" width="150">
         <template #default="scope">
-          <el-tooltip content="新增" placement="top">
-            <el-button link type="primary" icon="Plus" @click="handleAdd(scope.row)" v-hasPermi="['inventory:category:add']"></el-button>
-          </el-tooltip>
-          <el-tooltip content="修改" placement="top">
-            <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['inventory:category:edit']"></el-button>
-          </el-tooltip>
-          <el-tooltip content="删除" placement="top">
-            <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['inventory:category:remove']"></el-button>
-          </el-tooltip>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['inventory:category:edit']"></el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['inventory:category:remove']"></el-button>
         </template>
       </el-table-column>
     </el-table>
 
+    <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getList" />
+
     <!-- 添加或修改分类对话框 -->
-    <el-dialog :title="title" v-model="open" width="600px" append-to-body>
-      <el-form :model="form" :rules="rules" ref="categoryRef" label-width="100px">
-        <el-row>
-          <el-col :span="24" v-if="form.parentId !== 0">
-            <el-form-item label="上级分类" prop="parentId">
-              <el-tree-select
-                v-model="form.parentId"
-                :data="categoryOptions"
-                :props="{ value: 'categoryId', label: 'categoryName', children: 'children' }"
-                value-key="categoryId"
-                placeholder="请选择上级分类"
-                check-strictly
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="分类名称" prop="categoryName">
-              <el-input v-model="form.categoryName" placeholder="请输入分类名称" maxlength="50" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="显示排序" prop="sort">
-              <el-input-number v-model="form.sort" controls-position="right" :min="0" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="状态" prop="status">
-              <el-radio-group v-model="form.status">
-                <el-radio label="0">正常</el-radio>
-                <el-radio label="1">停用</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input v-model="form.remark" type="textarea" placeholder="请输入备注" maxlength="500" />
-            </el-form-item>
-          </el-col>
-        </el-row>
+    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+      <el-form :model="form" :rules="rules" ref="categoryRef" label-width="80px">
+        <el-form-item label="品类编码" prop="kindCode">
+          <el-input v-model="form.kindCode" placeholder="如: T= T恤" maxlength="5" />
+        </el-form-item>
+        <el-form-item label="品类名称" prop="categoryName">
+          <el-input v-model="form.categoryName" placeholder="请输入品类名称" maxlength="50" />
+        </el-form-item>
+        <el-form-item label="排序" prop="sort">
+          <el-input-number v-model="form.sort" :min="0" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-radio-group v-model="form.status">
+            <el-radio label="0">正常</el-radio>
+            <el-radio label="1">停用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="form.remark" type="textarea" placeholder="请输入备注" maxlength="500" />
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -131,13 +92,11 @@ const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { sys_normal_disable } = proxy?.useDict("sys_normal_disable");
 
 const categoryList = ref<any[]>([]);
-const categoryOptions = ref<any[]>([]);
 const open = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
 const title = ref("");
-const isExpandAll = ref(true);
-const refreshTable = ref(true);
+const total = ref(0);
 
 const data = reactive<{
   form: any;
@@ -146,11 +105,14 @@ const data = reactive<{
 }>({
   form: {},
   queryParams: {
+    pageNum: 1,
+    pageSize: 10,
     categoryName: undefined,
     status: undefined,
   },
   rules: {
-    categoryName: [{ required: true, message: "分类名称不能为空", trigger: "blur" }],
+    kindCode: [{ required: true, message: "品类编码不能为空", trigger: "blur" }],
+    categoryName: [{ required: true, message: "品类名称不能为空", trigger: "blur" }],
   }
 });
 
@@ -160,7 +122,8 @@ const { queryParams, form, rules } = toRefs(data);
 const getList = async () => {
   loading.value = true;
   const res = await listCategory(queryParams.value);
-  categoryList.value = proxy?.handleTree(res.data, "categoryId", "parentId");
+  categoryList.value = res.rows || res.data || [];
+  total.value = res.total || categoryList.value.length;
   loading.value = false;
 };
 
@@ -174,7 +137,7 @@ const cancel = () => {
 const reset = () => {
   form.value = {
     categoryId: undefined,
-    parentId: 0,
+    kindCode: undefined,
     categoryName: undefined,
     sort: 0,
     status: "0",
@@ -185,6 +148,7 @@ const reset = () => {
 
 /** 搜索按钮操作 */
 const handleQuery = () => {
+  queryParams.value.pageNum = 1;
   getList();
 };
 
@@ -194,26 +158,11 @@ const resetQuery = () => {
   handleQuery();
 };
 
-/** 展开/折叠操作 */
-const toggleExpandAll = () => {
-  refreshTable.value = false;
-  isExpandAll.value = !isExpandAll.value;
-  nextTick(() => {
-    refreshTable.value = true;
-  });
-};
-
 /** 新增按钮操作 */
-const handleAdd = (row?: any) => {
+const handleAdd = () => {
   reset();
-  if (row != undefined) {
-    form.value.parentId = row.categoryId;
-  } else {
-    form.value.parentId = 0;
-  }
   open.value = true;
-  title.value = "添加分类";
-  categoryOptions.value = categoryList.value;
+  title.value = "添加品类";
 };
 
 /** 修改按钮操作 */
@@ -221,9 +170,8 @@ const handleUpdate = async (row: any) => {
   reset();
   const res = await getCategory(row.categoryId);
   form.value = res.data;
-  categoryOptions.value = proxy?.selectDictLabel(categoryList.value, "categoryId", form.value.parentId);
   open.value = true;
-  title.value = "修改分类";
+  title.value = "修改品类";
 };
 
 /** 提交按钮 */
@@ -247,7 +195,7 @@ const submitForm = () => {
 
 /** 删除按钮操作 */
 const handleDelete = async (row: any) => {
-  await proxy?.$modal.confirm('是否确认删除分类"' + row.categoryName + '"？');
+  await proxy?.$modal.confirm('是否确认删除品类"' + row.categoryName + '"？');
   await delCategory(row.categoryId);
   getList();
   proxy?.$modal.msgSuccess("删除成功");

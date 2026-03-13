@@ -17,7 +17,7 @@ export function getBrand(brandId: number) {
   })
 }
 
-// 查询品牌列表（不分页）
+// 查询所有品牌（不分页）
 export function listBrandAll() {
   return request({
     url: '/inventory/brand/listAll',

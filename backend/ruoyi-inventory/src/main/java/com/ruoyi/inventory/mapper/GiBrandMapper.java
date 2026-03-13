@@ -4,7 +4,7 @@ import java.util.List;
 import com.ruoyi.inventory.domain.GiBrand;
 
 /**
- * 商品品牌Mapper接口
+ * 品牌Mapper接口
  */
 public interface GiBrandMapper {
     

@@ -30,6 +30,10 @@ public class GiCategory extends BaseEntity implements Serializable {
     @Excel(name = "排序")
     private Integer sort;
 
+    /** 品类编码 */
+    @Excel(name = "品类编码")
+    private String kindCode;
+
     /** 状态(0正常 1停用) */
     @Excel(name = "状态", readConverterExp = "0=正常,1=停用")
     private String status;
@@ -70,6 +74,14 @@ public class GiCategory extends BaseEntity implements Serializable {
 
     public void setSort(Integer sort) {
         this.sort = sort;
+    }
+
+    public String getKindCode() {
+        return kindCode;
+    }
+
+    public void setKindCode(String kindCode) {
+        this.kindCode = kindCode;
     }
 
     public String getStatus() {

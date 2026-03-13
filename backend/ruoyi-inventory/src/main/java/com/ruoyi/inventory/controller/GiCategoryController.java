@@ -69,4 +69,12 @@ public class GiCategoryController extends BaseController {
     public AjaxResult treeselect(GiCategory giCategory) {
         return success(giCategoryService.buildCategoryTreeSelect());
     }
+
+    /**
+     * 获取分类列表（扁平，用于商品表单下拉选择）
+     */
+    @GetMapping("/listAll")
+    public AjaxResult listAll() {
+        return success(giCategoryService.selectGiCategoryList(new GiCategory()));
+    }
 }
