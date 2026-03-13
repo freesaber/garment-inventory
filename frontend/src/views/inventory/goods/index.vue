@@ -45,7 +45,11 @@
       <el-table-column label="商品编码" align="center" prop="goodsCode" width="120" />
       <el-table-column label="商品名称" align="center" prop="goodsName" :show-overflow-tooltip="true" />
       <el-table-column label="分类" align="center" prop="categoryName" width="100" />
-      <el-table-column label="品牌" align="center" prop="brandName" width="100" />
+      <el-table-column label="品牌" align="center" prop="brand" width="100">
+        <template #default="scope">
+          {{ getBrandLabel(scope.row.brand) }}
+        </template>
+      </el-table-column>
       <el-table-column label="季节" align="center" prop="season" width="80">
         <template #default="scope">
           <span v-if="scope.row.season === '1'">春</span>
@@ -107,9 +111,9 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="品牌" prop="brandId">
-              <el-select v-model="form.brandId" placeholder="请选择品牌" clearable>
-                <el-option v-for="brand in brandOptions" :key="brand.brandId" :label="brand.brandName" :value="brand.brandId" />
+            <el-form-item label="品牌" prop="brand">
+              <el-select v-model="form.brand" placeholder="请选择品牌" clearable style="width: 100%">
+                <el-option v-for="dict in brandOptions" :key="dict.value" :label="dict.label" :value="dict.value" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -254,8 +258,8 @@
 <script setup name="Goods" lang="ts">
 import { listGoods, getGoods, delGoods, addGoods, updateGoods } from "@/api/inventory/goods"
 import { listCategoryAll } from "@/api/inventory/category"
-import { listBrandAll } from "@/api/inventory/brand"
 import { listSpecValuesByCode } from "@/api/inventory/spec"
+import { getDicts } from "@/api/system/dict/data"
 const { proxy } = getCurrentInstance() as ComponentInternalInstance
 
 // ==================== 打印相关配置 ====================
@@ -384,9 +388,23 @@ const getCategoryList = async () => {
   categoryOptions.value = res.data || []
 }
 
+// 获取品牌名称（根据字典值）
+const getBrandLabel = (brandValue: string) => {
+  if (!brandValue) return '-'
+  const brand = brandOptions.value.find((b: any) => b.value === brandValue)
+  return brand ? brand.label : brandValue
+}
+
 const getBrandList = async () => {
-  const res = await listBrandAll()
-  brandOptions.value = res.data || []
+  try {
+    const res = await getDicts('gi_brand')
+    brandOptions.value = (res.data || []).map((item: any) => ({
+      label: item.dictLabel,
+      value: item.dictValue
+    }))
+  } catch (e) {
+    console.error('加载品牌字典失败', e)
+  }
 }
 
 const cancel = () => { open.value = false; reset() }
@@ -397,7 +415,7 @@ const reset = () => {
     goodsCode: undefined, 
     goodsName: undefined, 
     categoryId: undefined, 
-    brandId: undefined, 
+    brand: undefined, 
     season: undefined, 
     year: new Date().getFullYear().toString(),
     unit: '件', 
@@ -527,7 +545,7 @@ const handlePrint = async () => {
           goodsId: res.data.goodsId,
           goodsCode: res.data.goodsCode,
           goodsName: res.data.goodsName,
-          brandName: res.data.brandName,
+          brand: res.data.brand,
           skuId: sku.skuId,
           skuCode: sku.skuCode,
           barcode: sku.barcode,
@@ -604,7 +622,7 @@ const generateTagHTML = (item: any): string => {
   </style>
 </head>
 <body>
-  <div class="brand">${item.brandName || ''}</div>
+  <div class="brand">${getBrandLabel(item.brand) || ''}</div>
   <div class="name">${item.goodsName}</div>
   <div class="info">
     <span>颜色: ${item.colorName || '-'}</span>

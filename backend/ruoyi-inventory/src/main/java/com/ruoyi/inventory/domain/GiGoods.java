@@ -31,13 +31,9 @@ public class GiGoods extends BaseEntity implements Serializable {
     /** 分类名称 */
     private String categoryName;
 
-    /** 品牌ID */
-    @Excel(name = "品牌ID")
-    private Long brandId;
-
-    /** 品牌名称 */
+    /** 品牌(字典值) */
     @Excel(name = "品牌")
-    private String brandName;
+    private String brand;
 
     /** 季节（1春 2夏 3秋 4冬 5四季） */
     @Excel(name = "季节", readConverterExp = "1=春,2=夏,3=秋,4=冬,5=四季")
@@ -124,20 +120,12 @@ public class GiGoods extends BaseEntity implements Serializable {
         this.categoryName = categoryName;
     }
 
-    public Long getBrandId() {
-        return brandId;
+    public String getBrand() {
+        return brand;
     }
 
-    public void setBrandId(Long brandId) {
-        this.brandId = brandId;
-    }
-
-    public String getBrandName() {
-        return brandName;
-    }
-
-    public void setBrandName(String brandName) {
-        this.brandName = brandName;
+    public void setBrand(String brand) {
+        this.brand = brand;
     }
 
     public String getSeason() {
