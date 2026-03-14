@@ -166,7 +166,7 @@
 import { listTransfer, getTransfer, createTransfer, auditTransfer, outTransfer, inTransfer, cancelTransfer, delTransfer } from "@/api/inventory/transfer"
 import { listGoods } from "@/api/inventory/goods"
 import { getDicts } from "@/api/system/dict/data"
-import { treeselect } from "@/api/system/dept"
+import { listDept } from "@/api/system/dept"
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance
 
@@ -179,6 +179,10 @@ const total = ref(0)
 const detailOpen = ref(false)
 const currentTransfer = ref<any>(null)
 const deptOptions = ref<any[]>([])
+
+// 仓库和门店选项
+const warehouseOptions = ref<any[]>([])
+const storeOptions = ref<any[]>([])
 
 const queryParams = ref({ pageNum: 1, pageSize: 10, status: undefined })
 
@@ -212,10 +216,13 @@ const loadDicts = async () => {
 
 const loadDeptTree = async () => {
   try {
-    const res = await treeselect()
-    deptOptions.value = res.data || []
+    const res = await listDept()
+    const depts = res.data || []
+    // 根据部门类型分组
+    warehouseOptions.value = depts.filter((d: any) => d.deptType === '1').map((d: any) => ({ id: d.deptId, label: d.deptName }))
+    storeOptions.value = depts.filter((d: any) => d.deptType === '0').map((d: any) => ({ id: d.deptId, label: d.deptName }))
   } catch (e) {
-    console.error('加载部门树失败', e)
+    console.error('加载部门失败', e)
   }
 }
 
