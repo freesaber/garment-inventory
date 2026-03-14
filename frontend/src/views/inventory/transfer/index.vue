@@ -7,27 +7,25 @@
       </template>
       
       <el-form :inline="true" style="margin-bottom: 15px">
-        <el-form-item label="调出门店">
-          <el-tree-select
-            v-model="deptIdOut"
-            :data="deptOptions"
-            :props="{ value: 'id', label: 'label', children: 'children' }"
-            value-key="id"
-            placeholder="请选择调出门店"
-            style="width: 200px"
-            check-strictly
-          />
+        <el-form-item label="调出方">
+          <el-select v-model="deptIdOut" placeholder="选择仓库或门店" style="width: 200px" filterable>
+            <el-option-group label="仓库">
+              <el-option v-for="dept in warehouseOptions" :key="dept.id" :label="dept.label" :value="dept.id" />
+            </el-option-group>
+            <el-option-group label="门店">
+              <el-option v-for="dept in storeOptions" :key="dept.id" :label="dept.label" :value="dept.id" />
+            </el-option-group>
+          </el-select>
         </el-form-item>
-        <el-form-item label="调入门店">
-          <el-tree-select
-            v-model="deptIdIn"
-            :data="deptOptions"
-            :props="{ value: 'id', label: 'label', children: 'children' }"
-            value-key="id"
-            placeholder="请选择调入门店"
-            style="width: 200px"
-            check-strictly
-          />
+        <el-form-item label="调入方">
+          <el-select v-model="deptIdIn" placeholder="选择仓库或门店" style="width: 200px" filterable>
+            <el-option-group label="仓库">
+              <el-option v-for="dept in warehouseOptions" :key="dept.id" :label="dept.label" :value="dept.id" />
+            </el-option-group>
+            <el-option-group label="门店">
+              <el-option v-for="dept in storeOptions" :key="dept.id" :label="dept.label" :value="dept.id" />
+            </el-option-group>
+          </el-select>
         </el-form-item>
         <el-form-item label="搜索SKU">
           <el-input v-model="scanCode" placeholder="输入SKU编码" style="width: 250px" @keyup.enter="handleScan" clearable />

@@ -3,12 +3,22 @@
     <!-- 采购开单区域 -->
     <el-card shadow="never" style="margin-bottom: 15px">
       <template #header>
-        <span>📦 采购开单</span>
+        <span>📦 采购入库</span>
       </template>
       
-      <el-form :inline="true">
+      <el-form :inline="true" style="margin-bottom: 15px">
+        <el-form-item label="入库目标">
+          <el-select v-model="targetDeptId" placeholder="选择仓库或门店" style="width: 200px" filterable>
+            <el-option-group label="仓库">
+              <el-option v-for="dept in warehouseOptions" :key="dept.id" :label="dept.label" :value="dept.id" />
+            </el-option-group>
+            <el-option-group label="门店">
+              <el-option v-for="dept in storeOptions" :key="dept.id" :label="dept.label" :value="dept.id" />
+            </el-option-group>
+          </el-select>
+        </el-form-item>
         <el-form-item label="搜索SKU">
-          <el-input v-model="scanCode" placeholder="输入SKU编码" style="width: 300px" @keyup.enter="handleScan" clearable />
+          <el-input v-model="scanCode" placeholder="输入SKU编码" style="width: 250px" @keyup.enter="handleScan" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleScan">添加商品</el-button>
@@ -27,12 +37,12 @@
         </el-table-column>
         <el-table-column label="进货价" align="center" width="120">
           <template #default="scope">
-            <el-input-number v-model="scope.row.price" :min="0" :precision="2" size="small" style="width: 100px" @change="calcTotal" />
+            <el-input-number v-model="scope.row.price" :min="0" :precision="2" size="small" style="width: 100px" />
           </template>
         </el-table-column>
         <el-table-column label="数量" align="center" width="100">
           <template #default="scope">
-            <el-input-number v-model="scope.row.quantity" :min="1" size="small" style="width: 80px" @change="calcTotal" />
+            <el-input-number v-model="scope.row.quantity" :min="1" size="small" style="width: 80px" />
           </template>
         </el-table-column>
         <el-table-column label="小计" align="center" width="100">
@@ -53,8 +63,8 @@
           <div style="font-size: 20px">
             合计: <span style="color: #409eff; font-weight: bold">¥{{ totalAmount.toFixed(2) }}</span>
           </div>
-          <el-button type="primary" size="large" @click="handleSubmit" :disabled="purchaseItems.length === 0">
-            创建采购单
+          <el-button type="primary" size="large" @click="handleSubmit" :disabled="purchaseItems.length === 0 || !targetDeptId">
+            确认入库
           </el-button>
         </div>
       </div>
@@ -64,7 +74,7 @@
     <el-card shadow="never">
       <template #header>
         <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>📋 采购单列表</span>
+          <span>📋 入库记录</span>
           <el-form :inline="true" size="small">
             <el-form-item>
               <el-select v-model="queryParams.status" placeholder="状态" clearable style="width: 100px">
@@ -82,6 +92,7 @@
       
       <el-table :data="purchaseList" border>
         <el-table-column label="采购单号" align="center" prop="purchaseNo" width="150" />
+        <el-table-column label="入库目标" align="center" prop="deptName" width="120" />
         <el-table-column label="商品数" align="center" width="80">
           <template #default="scope">{{ scope.row.itemList?.length || 0 }}</template>
         </el-table-column>
@@ -96,7 +107,7 @@
           </template>
         </el-table-column>
         <el-table-column label="创建时间" align="center" prop="createTime" width="160" />
-        <el-table-column label="操作" align="center" width="200">
+        <el-table-column label="操作" align="center" width="180">
           <template #default="scope">
             <el-button link type="primary" @click="viewDetail(scope.row)">详情</el-button>
             <el-button link type="success" @click="handleConfirm(scope.row)" v-if="scope.row.status === '0'" v-hasPermi="['inventory:purchase:edit']">入库</el-button>
@@ -113,6 +124,7 @@
     <el-dialog title="采购单详情" v-model="detailOpen" width="700px">
       <el-descriptions :column="2" border v-if="currentPurchase">
         <el-descriptions-item label="采购单号">{{ currentPurchase.purchaseNo }}</el-descriptions-item>
+        <el-descriptions-item label="入库目标">{{ currentPurchase.deptName }}</el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-tag v-if="currentPurchase.status === '0'" type="warning">待入库</el-tag>
           <el-tag v-else-if="currentPurchase.status === '1'" type="success">已入库</el-tag>
@@ -131,9 +143,13 @@
         <el-table-column label="尺码" align="center" width="60">
           <template #default="scope">{{ getSizeLabel(scope.row.size) }}</template>
         </el-table-column>
-        <el-table-column label="单价" align="center" width="80">¥{{ scope.row.price }}</el-table-column>
+        <el-table-column label="单价" align="center" width="80">
+          <template #default="scope">¥{{ scope.row.price }}</template>
+        </el-table-column>
         <el-table-column label="数量" align="center" width="60" prop="quantity" />
-        <el-table-column label="小计" align="center" width="80">¥{{ scope.row.amount }}</el-table-column>
+        <el-table-column label="小计" align="center" width="80">
+          <template #default="scope">¥{{ scope.row.amount }}</template>
+        </el-table-column>
       </el-table>
     </el-dialog>
   </div>
@@ -143,10 +159,12 @@
 import { listPurchase, getPurchase, createPurchase, confirmPurchase, cancelPurchase, delPurchase } from "@/api/inventory/purchase"
 import { listGoods } from "@/api/inventory/goods"
 import { getDicts } from "@/api/system/dict/data"
+import { listDept } from "@/api/system/dept"
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance
 
 const scanCode = ref("")
+const targetDeptId = ref<number | undefined>()
 const purchaseItems = ref<any[]>([])
 const purchaseList = ref<any[]>([])
 const total = ref(0)
@@ -157,6 +175,8 @@ const queryParams = ref({ pageNum: 1, pageSize: 10, status: undefined })
 
 const colorOptions = ref<any[]>([])
 const sizeOptions = ref<any[]>([])
+const warehouseOptions = ref<any[]>([])
+const storeOptions = ref<any[]>([])
 
 const totalAmount = computed(() => purchaseItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0))
 const totalQuantity = computed(() => purchaseItems.value.reduce((sum, item) => sum + item.quantity, 0))
@@ -181,6 +201,23 @@ const loadDicts = async () => {
     sizeOptions.value = (sizeRes.data || []).map((item: any) => ({ label: item.dictLabel, value: item.dictValue }))
   } catch (e) {
     console.error('加载字典失败', e)
+  }
+}
+
+const loadDepts = async () => {
+  try {
+    const res = await listDept()
+    const depts = res.data || []
+    // 根据部门类型分组
+    warehouseOptions.value = depts.filter((d: any) => d.deptType === '1').map((d: any) => ({ id: d.deptId, label: d.deptName }))
+    storeOptions.value = depts.filter((d: any) => d.deptType === '0').map((d: any) => ({ id: d.deptId, label: d.deptName }))
+    
+    // 默认选择第一个仓库
+    if (warehouseOptions.value.length > 0 && !targetDeptId.value) {
+      targetDeptId.value = warehouseOptions.value[0].id
+    }
+  } catch (e) {
+    console.error('加载部门失败', e)
   }
 }
 
@@ -227,13 +264,12 @@ const clearItems = () => {
   purchaseItems.value = []
 }
 
-const calcTotal = () => {}
-
 const handleSubmit = async () => {
-  if (purchaseItems.value.length === 0) return
+  if (purchaseItems.value.length === 0 || !targetDeptId.value) return
   
   try {
     const data = {
+      deptId: targetDeptId.value,
       itemList: purchaseItems.value.map(item => ({
         skuId: item.skuId,
         price: item.price,
@@ -242,11 +278,11 @@ const handleSubmit = async () => {
     }
     
     const res = await createPurchase(data)
-    proxy?.$modal.msgSuccess("采购单创建成功：" + res.data?.purchaseNo || "")
+    proxy?.$modal.msgSuccess("入库成功：" + res.data?.purchaseNo || "")
     purchaseItems.value = []
     getList()
   } catch (e: any) {
-    proxy?.$modal.msgError(e.message || "创建失败")
+    proxy?.$modal.msgError(e.message || "入库失败")
   }
 }
 
@@ -285,6 +321,7 @@ const handleDelete = async (row: any) => {
 
 onMounted(() => {
   loadDicts()
+  loadDepts()
   getList()
 })
 </script>
