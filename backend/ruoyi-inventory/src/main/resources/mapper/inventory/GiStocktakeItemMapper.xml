@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.inventory.mapper.GiStocktakeItemMapper">
+    
+    <resultMap type="GiStocktakeItem" id="GiStocktakeItemResult">
+        <id     property="itemId"      column="item_id"      />
+        <result property="stocktakeId" column="stocktake_id" />
+        <result property="skuId"       column="sku_id"       />
+        <result property="skuCode"     column="sku_code"     />
+        <result property="goodsName"   column="goods_name"   />
+        <result property="color"       column="color"        />
+        <result property="size"        column="size"         />
+        <result property="systemQty"   column="system_qty"   />
+        <result property="actualQty"   column="actual_qty"   />
+        <result property="diffQty"     column="diff_qty"     />
+        <result property="costPrice"   column="cost_price"   />
+        <result property="diffAmount"  column="diff_amount"  />
+    </resultMap>
+
+    <select id="selectByStocktakeId" parameterType="Long" resultMap="GiStocktakeItemResult">
+        select item_id, stocktake_id, sku_id, sku_code, goods_name, color, size, 
+               system_qty, actual_qty, diff_qty, cost_price, diff_amount
+        from gi_stocktake_item
+        where stocktake_id = #{stocktakeId}
+    </select>
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into gi_stocktake_item (stocktake_id, sku_id, sku_code, goods_name, color, size, system_qty, actual_qty, diff_qty, cost_price, diff_amount) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.stocktakeId}, #{item.skuId}, #{item.skuCode}, #{item.goodsName}, #{item.color}, #{item.size}, #{item.systemQty}, #{item.actualQty}, #{item.diffQty}, #{item.costPrice}, #{item.diffAmount})
+        </foreach>
+    </insert>
+
+    <update id="updateItem" parameterType="GiStocktakeItem">
+        update gi_stocktake_item
+        set actual_qty = #{actualQty}, diff_qty = #{diffQty}, diff_amount = #{diffAmount}
+        where item_id = #{itemId}
+    </update>
+
+    <delete id="deleteByStocktakeId" parameterType="Long">
+        delete from gi_stocktake_item where stocktake_id = #{stocktakeId}
+    </delete>
+</mapper>
